@@ -1,0 +1,198 @@
+
+body {
+	margin: 5px 20px
+}
+
+#encounterTitle {
+text-align: center;
+font-size: 200%;
+}
+
+#encounterTitle  .current{
+font-size: 150%
+}
+
+.bg-c {
+ background:#ff0000;
+}
+
+.bg-deathknight {
+ background:#C41F3B
+}
+.bg-druid {
+ background:#FF7D0A
+}
+.bg-hunter {
+ background:#ABD473
+}
+.bg-mage {
+ background:#69CCF0
+}
+.bg-monk {
+ background:#00FF96
+}
+.bg-paladin {
+ background:#F58CBA
+}
+.bg-priest {
+ background:#FFFFFF
+}
+.bg-rogue {
+ background:#FFF569
+}
+.bg-shamen {
+ background:#0070DE
+}
+.bg-warlock {
+ background:#9482C9
+}
+.bg-warrior {
+ background:#C79C6E
+}
+#dpsTable td, #spellTable td, #auraTable td {
+white-space: nowrap;
+}
+
+
+#dpsTable table col:nth-child(1) {
+width:30%
+}
+#dpsTable table col:nth-child(2) {
+width:60%;
+}
+#dpsTable table col:nth-child(3) {
+width:10%
+}
+
+#spellTable table col:nth-child(1) {
+width:20%
+}
+#spellTable table col:nth-child(2) {
+width:50%;
+}
+#spellTable table col:nth-child(3) {
+width:5%
+}
+#spellTable table col:nth-child(4) {
+width:5%
+}
+#spellTable table col:nth-child(5) {
+width:5%;
+}
+#spellTable table col:nth-child(6) {
+width:5%
+}
+#spellTable table col:nth-child(7) {
+width:5%
+}
+#spellTable table col:nth-child(8) {
+width:5%
+}
+
+#spellTable td img {
+width:25px;
+padding:0px;
+margin: -6px 5px -3px -3px;
+}
+
+#auraTable table col:nth-child(1) {
+width:15%
+}
+#auraTable table col:nth-child(2) {
+width:70%;
+border-left: 1px solid black;
+border-right: 1px solid black;
+}
+
+#auraTable table tr td:nth-child(2){
+padding:6px 0px;
+}
+
+#auraTable table col:nth-child(3) {
+width:5%
+}
+
+#auraTable .wrapper {
+position:relative;
+width:100%;
+//height:2em;
+}
+
+#auraTable .bar {
+position: absolute;
+//background: #990000;
+height:19px;
+}
+
+#auraTimeMarker {
+	position: absolute;
+	border-right:1px solid black;
+	width:0px;
+	height:0px;
+	z-index:100;
+}
+
+
+#dpsTable table td:first-child + td, #spellTable table td:first-child + td ,#spellTable table th:first-child + th{
+text-align: right; 
+}
+
+.classBar {
+float:left;
+height:1.2em;
+}
+
+.classBar:nth-child(2) {
+opacity:0.5;
+}
+
+#spellTable .classbar, .spellbackground-0{
+background: #ffffff;
+}
+
+#castTimeline .fullLine {
+
+	background:#353A41;
+	height: 50px;
+	border-left:1px solid #aaaaaa;
+	border-right:1px solid #aaaaaa;
+	position:relative;
+}
+
+#castTimeline .item {
+	position: absolute;
+}
+
+#castTimeline .item  img{
+	width:20px;
+	z-index:2;
+	padding-top:5px;
+}
+
+#castTimeline .timeMarker {
+position: absolute;
+border-right:1px solid #aaaaaa;
+line-height:73px;
+text-align:right;
+z-index:1;
+height: 50px;
+font-weight:bold;
+font-size:150%;
+padding-right:10px;
+}
+
+#castTimeline .zoomLine {
+	margin-top:5px;
+	height: 50px;
+	border-left:1px solid #aaaaaa;
+	border-right:1px solid #aaaaaa;
+	overflow: hidden;
+}
+
+#castTimeline  .zoomInner {
+	position:relative;
+	background-image: url("zoombg.png");
+    background-repeat: repeat-x;
+	height: 50px;
+	
+}
