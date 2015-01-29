@@ -48,6 +48,8 @@ func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		//    notFound(w, r)
 		case http.StatusInternalServerError:
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		case http.StatusNotFound:
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)	
 		default:
 			// Catch any other errors we haven't explicitly handled
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -149,6 +151,7 @@ func iconHandler(w http.ResponseWriter, r *http.Request) {
 	f.Close()
 }
 
+
 func main() {
 	
 	c := make(chan os.Signal, 1)
@@ -199,6 +202,7 @@ func main() {
 
 	http.Handle("/websockets", appHandler{aC, websocketHandler})
 	http.HandleFunc("/icons", iconHandler)
+	http.Handle("/api/", appHandler{aC, RESTHandler})
 	http.Handle("/", http.FileServer(http.Dir("webfiles/")))
 
 	log.Print("Serving")

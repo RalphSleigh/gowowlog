@@ -66,6 +66,7 @@ type returnJSON struct {
 }
 
 type encounterJSON struct {
+	ID        int
 	Name      string
 	StartTime time.Time
 	EndTime   time.Time
@@ -92,7 +93,7 @@ func (lf *logFile) sendEncounters(c *requestItem, d dataMap) {
 			continue
 		}
 		v.GetPlayerClassSpec(lf)
-		resp = append(resp, encounterJSON{v.Name, v.StartTime, v.EndTime, v.EndTime.Sub(v.StartTime), v.GetPlayerDPS(lf)})
+		resp = append(resp, encounterJSON{v.ID, v.Name, v.StartTime, v.EndTime, v.EndTime.Sub(v.StartTime), v.GetPlayerDPS(lf)})
 	}
 	msg := returnJSON{"e.updateEncounters", resp}
 	//err := c.conn.WriteJSON(returnJSON{"system.updateEncounters", resp})

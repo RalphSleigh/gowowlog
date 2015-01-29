@@ -79,6 +79,7 @@ type spell struct {
 type unitSpells map[int]*spell
 
 type encounter struct {
+	ID int
 	Name      string
 	IsBoss    bool
 	StartTime time.Time
@@ -860,10 +861,13 @@ func (lf *logFile) parseEncounterEnd(event *wowEvent) {
 
 func (lf *logFile) newEncounter(boss string) {
 
+	id := 0
 	if lf.currentEncounter != nil {
 		lf.encounters[lf.currentEncounter.StartTime] = lf.currentEncounter
+		id = lf.currentEncounter.ID + 1
 	}
 	lf.currentEncounter = new(encounter)
+	lf.currentEncounter.ID = id
 	lf.currentEncounter.Name = boss
 	lf.currentEncounter.UnitMap = make(UnitMap)
 	//lf.currentEncounter.PlayerMap = make(PlayerMap)
