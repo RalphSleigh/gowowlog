@@ -89,10 +89,11 @@ width:5%
 width:5%
 }
 
-#spellTable td img {
+#spellTable td img, #auraTable td img {
 width:25px;
 padding:0px;
 margin: -6px 5px -3px -3px;
+
 }
 
 #auraTable table col:nth-child(1) {
@@ -101,15 +102,22 @@ width:15%
 #auraTable table col:nth-child(2) {
 width:70%;
 border-left: 1px solid black;
-border-right: 1px solid black;
+border-right: 1px solid black;  
 }
 
 #auraTable table tr td:nth-child(2){
-padding:6px 0px;
+padding:3px 0px;
+
 }
 
 #auraTable table col:nth-child(3) {
 width:5%
+}
+
+#auraTable canvas {
+width:100%;
+height:1px;
+display:block;
 }
 
 #auraTable .wrapper {
@@ -196,3 +204,9 @@ padding-right:10px;
 	height: 50px;
 	
 }
+
+
+/*animation*/
+
+
+

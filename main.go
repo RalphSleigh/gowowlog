@@ -6,23 +6,24 @@ import (
 	//"github.com/davecgh/go-spew/spew"
 	"encoding/json"
 	"github.com/ActiveState/tail"
-	"github.com/gorilla/websocket"
+	//"github.com/gorilla/websocket"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
+	//"time"
 	"flag"
 	"runtime/pprof"
 	"os/signal"
+	//"errors"
 	//"io"
+	//"github.com/ActiveState/tail/ratelimiter"
 )
 
 type empty interface{}
 
 type appContext struct {
 	lf       *logFile
-	wsList   map[*websocket.Conn]bool //do we need a bool? only need the value really
-	requests chan (*requestItem)
 }
 
 type appHandler struct {
@@ -30,12 +31,6 @@ type appHandler struct {
 	handler func(*appContext, http.ResponseWriter, *http.Request) (int, error)
 }
 
-type requestItem struct {
-	conn *websocket.Conn
-	data interface{}
-}
-
-type dataMap map[string]interface{}
 
 func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if status, err := ah.handler(ah.aC, w, r); err != nil {
@@ -57,85 +52,30 @@ func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *appContext) readSocket(conn *websocket.Conn) {
-	for {
-		var v dataMap
-		err := conn.ReadJSON(&v)
-		if err != nil {
-			log.Println("ReadError", err)
-			return
-		}
-		c.requests <- &requestItem{conn, v}
-	}
-}
 
-func (c *appContext) processRequests() {
-	log.Println("Processing")
-	for n := range c.requests {
-		j, ok := n.data.(dataMap)
-		if ok {
-			s := j["request"].(string)
-			switch s {
-			case "encounters":
-				c.lf.sendEncounters(n, j)
-			case "unitSpells":
-				c.lf.sendUnitSpells(n, j)
-			case "unitAuras":
-				c.lf.sendUnitAuras(n, j)
-			case "classStrings":
-				c.lf.sendClassStrings(n, j)
-			}
-		} else {
-
-			log.Println(j)
-		}
-	}
-}
-
-func applicationPing(conn *websocket.Conn) {
-
-	t := time.NewTicker(10 * time.Second)
-
-	for range t.C {
-		if err := conn.WriteJSON(&returnJSON{}); err != nil {
-			t.Stop()
-		}
-	}
-
-}
-
-func websocketHandler(c *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
-	var upgrader = websocket.Upgrader{}
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return http.StatusOK, nil
-	}
-	go applicationPing(conn)
-	c.wsList[conn] = true
-
-	c.readSocket(conn)
-
-	delete(c.wsList, conn)
-	return http.StatusOK, nil
-}
 
 func iconHandler(w http.ResponseWriter, r *http.Request) {
 	//check icon cache, if not get from Blizzard.]
 	//TODO: Fix errors
-	spellID := r.URL.RawQuery
-
+	vars := mux.Vars(r)
+	spellID := vars["id"]
 	if spellID == "0" {
 		spellID = "88163"
 	}
 
 	f, err := os.Open("webfiles/icons/" + spellID)
 	if err != nil {
-		log.Print("Getting icon")
+		//log.Print("Getting icon")
 		infoRequest, _ := http.Get("http://eu.battle.net/api/wow/spell/" + spellID)
 		jsonBytes, _ := ioutil.ReadAll(infoRequest.Body)
 		v := make(map[string]interface{})
 		json.Unmarshal(jsonBytes, &v)
+		
+		_, ok := v["icon"];
+		if !ok {
+			http.Error(w, "no icon", http.StatusNotFound)
+			return
+		}
 		//log.Print(jsonBytes)
 		iconRequest, _ := http.Get("http://eu.media.blizzard.com/wow/icons/56/" + v["icon"].(string) + ".jpg")
 		iconBytes, _ := ioutil.ReadAll(iconRequest.Body)
@@ -181,7 +121,9 @@ func main() {
 	//STOP PROFILLING
 	
 	//open log
+	//logFileReader, err := tail.TailFile(*logfile, tail.Config{Follow: true, Poll: true, RateLimiter: ratelimiter.NewLeakyBucket(1000, 1*time.Second)})
 	logFileReader, err := tail.TailFile(*logfile, tail.Config{Follow: true, Poll: true})
+	
 	//logFileReader, err := os.Open(os.Args[1])
 	if err != nil {
 		log.Fatal("Cant open file")
@@ -196,15 +138,22 @@ func main() {
 	
 	aC := &appContext{}
 	aC.lf = logFile
-	aC.wsList = make(map[*websocket.Conn]bool)
-	aC.requests = make(chan (*requestItem))
-	go aC.processRequests()
 
-	http.Handle("/websockets", appHandler{aC, websocketHandler})
-	http.HandleFunc("/icons", iconHandler)
-	http.Handle("/api/", appHandler{aC, RESTHandler})
-	http.Handle("/", http.FileServer(http.Dir("webfiles/")))
+	
+	r := mux.NewRouter()
+	api := r.PathPrefix("/api").Subrouter()
+	
+	api.Handle("/e",appHandler{aC, RESTEncounters})
+	api.Handle("/e/{eID:[0-9]+}",appHandler{aC, RESTEncounterDetails})
+	api.Handle("/e/{eID:[0-9]+}/p/{pID}/spells",appHandler{aC, RESTSpellsDetails})
+	api.Handle("/e/{eID:[0-9]+}/p/{pID}/auras",appHandler{aC, RESTAuraDetails})
 
+	r.HandleFunc("/icons/{id:[0-9]+}", iconHandler)
+
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("webfiles/")))
+	
+	
+	http.Handle("/", r)
 	log.Print("Serving")
 
 	log.Fatal(http.ListenAndServe(":8081", nil))

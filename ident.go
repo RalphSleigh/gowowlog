@@ -135,10 +135,10 @@ func (e *encounter) GetPlayerClassSpec(lf *logFile) {
 			case 116: //frostbolt
 				unit.Class = CLASS_MAGE
 				unit.Spec = SPEC_MAGE_FROST
-			case 12:
+			case 121253: //keg smash
 				unit.Class = CLASS_MONK
 				unit.Spec = SPEC_MONK_BREWMASTER
-			case 13:
+			case 116670: //uplift
 				unit.Class = CLASS_MONK
 				unit.Spec = SPEC_MONK_MISTWEAVER
 			case 117418: //fists of fury
@@ -153,7 +153,7 @@ func (e *encounter) GetPlayerClassSpec(lf *logFile) {
 			case 53385: //divine storm
 				unit.Class = CLASS_PALADIN
 				unit.Spec = SPEC_PALADIN_RETRIBUTION
-			case 47666: //penance
+			case 47666, 81700, 47750: //penance, archangel, more penance
 				unit.Class = CLASS_PRIEST
 				unit.Spec = SPEC_PRIEST_DESCIPLINE
 			case 126135, 139, 34861: //lightwell, renew, circle of healing

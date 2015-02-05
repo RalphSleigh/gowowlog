@@ -1,0 +1,13 @@
+<div id="auraPlayerTable">
+<table class="table table-condensed table-striped table-hover">
+	<colgroup><col></colgroup>
+		<thead>
+			<tr><th>Name</th></tr>
+		</thead>
+		<tbody>
+				<tr ui-sref="home.encounter.auras.display({e: e.ID, p: player.ID})" ng-repeat="player in e.PlayerDPS | orderBy:orderFunction">
+					<td>{{player.Name}}</td>
+				</tr>
+		</tbody>
+</table>
+</div>

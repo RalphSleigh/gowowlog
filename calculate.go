@@ -4,8 +4,8 @@ import (
 	//"github.com/davecgh/go-spew/spew"
 	//"strings"
 	//"github.com/gorilla/websocket"
-	"log"
-	"strconv"
+	//"log"
+	//"strconv"
 	"time"
 )
 
@@ -74,6 +74,7 @@ type encounterJSON struct {
 	PlayerDPS []playerDPS
 }
 
+/*
 func (lf *logFile) sendClassStrings(c *requestItem, d dataMap) {
 
 	m := make(map[string]classString)
@@ -99,7 +100,7 @@ func (lf *logFile) sendEncounters(c *requestItem, d dataMap) {
 	//err := c.conn.WriteJSON(returnJSON{"system.updateEncounters", resp})
 	c.conn.WriteJSON(msg)
 }
-
+*/
 type spellResponse struct {
 	SpellID int
 	SpellName string
@@ -154,7 +155,7 @@ func (sp *spellResponse) add(e spellEvent) {
 	
 	//return sp
 }
-
+/*
 func (lf *logFile) sendUnitSpells(c *requestItem, d dataMap) {
 
 	t, _ := time.Parse(time.RFC3339, d["encounter"].(string))
@@ -214,9 +215,9 @@ func (lf *logFile) sendUnitSpells(c *requestItem, d dataMap) {
 		for _,v := range u.auras {
 				spew.Dump(v)
 		}
-	*/
-}
 
+}
+*/
 type AuraResponseList struct {
 	Auras []AuraResponse
 	Unit  string
@@ -234,7 +235,7 @@ type AuraEventResponse struct {
 	Time   time.Duration
 	Stacks int
 }
-
+/*
 func (lf *logFile) sendUnitAuras(c *requestItem, d dataMap) {
 	t, _ := time.Parse(time.RFC3339, d["encounter"].(string))
 	unitid := d["unitid"].(string)
@@ -297,8 +298,9 @@ func (lf *logFile) sendUnitAuras(c *requestItem, d dataMap) {
 		amount int //stuff like absorb assuming we can track.
 	}
 
-	*/
+
 
 	msg := returnJSON{"system.unitAuraInfo", AuraResponseList{resp, unitid}}
 	c.conn.WriteJSON(msg)
 }
+*/

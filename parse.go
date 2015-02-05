@@ -81,14 +81,18 @@ type unitSpells map[int]*spell
 type encounter struct {
 	ID int
 	Name      string
+	Live      bool
 	IsBoss    bool
 	StartTime time.Time
 	EndTime   time.Time
+	Kill 	  bool
+	Difficulty int
+	Players    int
 	UnitMap   UnitMap
 	//PlayerMap   PlayerMap
 }
 
-type encounterMap map[time.Time]*encounter
+type encounterMap map[int]*encounter
 type UnitMap map[string]*wunit
 
 type petMap map[string]string
@@ -129,19 +133,25 @@ func (lf *logFile) ParseLogFile() {
 	*/
 
 	for line := range lf.file.Lines {
-
+		if line.Err != nil {
+			log.Print(line.Err)
+			continue
+			}
+		
 		lf.ParseLine(line.Text)
 		//lf.ParseLine()
 
-		if n%100000 == 0 && n != 0 {
+		if n%10000 == 0 && n != 0 {
 			//log.Printf("Parsed %v lines",n)
 			then := time.Now()
-			duration := then.Sub(now).Seconds()
-			speed := n / int(duration)
-			log.Printf("Parsed %v entries in %v seconds (%v/sec)", n, int(duration), speed)
+			duration := then.Sub(now)
+			speed := float64(n) / float64(duration/time.Second)
+			log.Printf("Parsed %v entries in %v seconds (%v/sec)", n, int(duration/time.Second), speed)
+			//time.Sleep(250 * time.Millisecond)
 		}
 		n++
 	}
+	log.Print("Hmm")
 }
 
 func quickerAlmostCSVParse(line string) []string {
@@ -230,6 +240,7 @@ func (lf *logFile) ParseLine(line string)  {
 	*/
 	
 	parts := quickerAlmostCSVParse(line)
+	
 	timeandevent := strings.Split(parts[0], "  ")
 
 	event.eventType = timeandevent[1]
@@ -260,8 +271,12 @@ func (lf *logFile) ParseLine(line string)  {
 		lf.parseSpellSummon(event)
 	case "SPELL_AURA_APPLIED":
 		lf.parseSpellAuraApplied(event)
+		case "SPELL_AURA_APPLIED_DOSE":
+		lf.parseSpellAuraAppliedDose(event)
 	case "SPELL_AURA_REMOVED":
 		lf.parseSpellAuraRemoved(event)
+		case "SPELL_AURA_REMOVED_DOSE":
+		lf.parseSpellAuraRemovedDose(event)
 	case "ENCOUNTER_START":
 		lf.parseEncounterStart(event)
 	case "ENCOUNTER_END":
@@ -551,7 +566,7 @@ Player-3391-068B0ACD, Absorb provider??
 "Sugarcandy-Silvermoon",  Name? 
 0x514, flags?
 0x0, flags?
-17,  Absorb Spell
+17,  Absorb Spell AURA ID, MAY NOT BE SPELL ID
 "Power Word: Shield", Absorb name
 0x2,  absorb school?
 3538 absorb amouunt?
@@ -592,6 +607,20 @@ func (lf *logFile) parseSpellAbsorbed(event *wowEvent) {
 		caster := lf.currentEncounter.getUnitFromFields(event.fields[12:14])
 		cs := caster.getSpell(event.fields[16:19])
 		cs.healingEvents = append(s.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
+		//we need an aura event too
+		
+		aura := target.getAura(event.fields[16:], caster)//should always have been seen.
+		//ALMIGHTY HACK TO PREVENT PARSER CRASHING DUE TO Aura applied before current encounter
+		if len(aura.events) != 0 {
+			lastEvent := aura.events[len(aura.events)-1:][0]
+		
+			auraEvent := auraEvent{event.eventTime, 1, lastEvent.amount - amount}
+
+			aura.events = append(aura.events, auraEvent)
+		} else {
+			auraEvent := auraEvent{event.eventTime, 1, amount}
+			aura.events = append(aura.events, auraEvent)
+		}
 	} else {  //melee
 		s := source.getSpell([]string{"0","Melee","1"})
 		amount, _ := strconv.Atoi(event.fields[16])
@@ -601,64 +630,19 @@ func (lf *logFile) parseSpellAbsorbed(event *wowEvent) {
 		caster := lf.currentEncounter.getUnitFromFields(event.fields[9:11])
 		cs := caster.getSpell(event.fields[13:16])
 		cs.healingEvents = append(s.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
-	}
-	/*
-	source, target := lf.currentEncounter.getSourceDestUnit(event)
-	
-	var err error
-	var absorber *wunit
-	var amount, spellabsorb,spellcast string
-	var spellID,damage int
-	var school int64
-	if event.fields[17] == "" {//MELEE
-	
-	
-	amount = event.fields[16]
-	spellabsorb = event.fields[14]
-	spellcast = "Melee"
-	school = 1
-	
-	//credit damage to source unit, CRIT/MULTI?
-	spellID = 1
-	damage, err = strconv.Atoi(event.fields[16])
-	
-	} else {
-	
-	absorber = lf.currentEncounter.getUnitFromFields(event.fields[12:14])
-	amount = event.fields[19]
-	spellabsorb = event.fields[17]
-	spellcast = event.fields[10]
-	school,_ = strconv.ParseInt(event.fields[11], 0, 0)
-	
-	//credit damage to source unit, CRIT/MULTI?
-	spellID, _ = strconv.Atoi(event.fields[9])
-	damage, err = strconv.Atoi(event.fields[19])
-	}
-
-	spellDamage, seen := source.spells[spellID]
-
-	if !seen {
-		spellDamage.SpellName = spellcast
-		spellDamage.School = school
-	}
-	
-	spellDamage.Adamage += damage
-	spellDamage.Nabsorb++  // IS IT A HIT? NO SPELL_PEROIDIC_ABSORB
-	source.spells[spellID] = spellDamage
-	
-	if err != nil {
-	//log.Print(spellID)
-	//log.Print(err)
-	//log.Print(damage)
-	for i,a := range event.fields {
+		//we need an aura event too
 		
-		log.Printf("[%v]: %v",i,a)
+		aura := target.getAura(event.fields[13:], caster)
+		if len(aura.events) != 0 {
+			lastEvent := aura.events[len(aura.events)-1:][0]
+		
+			auraEvent := auraEvent{event.eventTime, 1, lastEvent.amount - amount}
+
+			aura.events = append(aura.events, auraEvent)
+		}
+		
 	}
 
-	
-	log.Printf("%v's\n %v\n on %v\n absorbs %v\n of %v's\n %v\n\n",absorber.name,spellabsorb,target.name,amount,source.name,spellcast)
-	}
-    */
 }
 /*
 12/29 15:55:56.520  SWING_DAMAGE_LANDED,
@@ -771,29 +755,54 @@ Player-3391-0681DA9C, Dest GUID
 "Rejuvenation", SpellName
 0x8,  SpellSchool
 BUFF  AuraType
+12345 ??????? SOMETIMES AN AMOUNT!
 */
 func (lf *logFile) parseSpellAuraApplied(event *wowEvent) {
 
 	source, dest := lf.currentEncounter.getSourceDestUnit(event)
-	auraID, _ := strconv.Atoi(event.fields[9])
+	amount, _ := strconv.Atoi(event.fields[13])
 
-	key := auraKey{auraID, source}
+	aura := dest.getAura(event.fields[9:], source)
 
-	aura, seen := dest.auras[key]
-
-	if !seen {
-		aura = &unitAura{}
-		aura.name = event.fields[10]
-		school, _ := strconv.ParseInt(event.fields[11], 0, 0)
-		aura.school = school
-		aura.events = make([]auraEvent, 0, 10)
-		dest.auras[key] = aura
-	}
-
-	auraEvent := auraEvent{event.eventTime, 1, 0}
+	auraEvent := auraEvent{event.eventTime, 1, amount}
 
 	aura.events = append(aura.events, auraEvent)
+	
+	//if event.fields[13] != "" {
+	//	log.Printf("%v Applied %v",aura.name, event.fields[13])
+	//}
 
+	
+}
+
+/*
+12/29 15:50:44.824  SPELL_AURA_APPLIED_DOSE,
+Player-3660-072DB2EE,
+"Fatherpeach-Neptulon",
+0x514,
+0x0,
+Player-3660-072DB2EE,
+"Fatherpeach-Neptulon",
+0x514,
+0x0,
+155362,
+"Word of Mending",
+0x1,
+BUFF,
+2
+*/
+
+func (lf *logFile) parseSpellAuraAppliedDose(event *wowEvent) {
+
+	source, dest := lf.currentEncounter.getSourceDestUnit(event)
+	dose, _ := strconv.Atoi(event.fields[13])
+
+	aura := dest.getAura(event.fields[9:], source)
+
+	auraEvent := auraEvent{event.eventTime, dose, 0}
+
+	aura.events = append(aura.events, auraEvent)
+	
 }
 
 /*
@@ -816,64 +825,98 @@ DEBUFF
 func (lf *logFile) parseSpellAuraRemoved(event *wowEvent) {
 
 	source, dest := lf.currentEncounter.getSourceDestUnit(event)
-	auraID, _ := strconv.Atoi(event.fields[9])
+	//auraID, _ := strconv.Atoi(event.fields[9])
+	//amount, _ := strconv.Atoi(event.fields[13]) //Contains remaning absorb?
 
-	key := auraKey{auraID, source}
-
-	aura, seen := dest.auras[key]
-
-	if !seen {
-		aura = &unitAura{}
-		aura.name = event.fields[10]
-		school, _ := strconv.ParseInt(event.fields[11], 0, 0)
-		aura.school = school
-		aura.events = make([]auraEvent, 0, 10)
-		dest.auras[key] = aura
-	}
+	aura := dest.getAura(event.fields[9:], source)
 
 	auraEvent := auraEvent{event.eventTime, 0, 0}
 
 	aura.events = append(aura.events, auraEvent)
+	
+	//if event.fields[13] != "" {
+	//	log.Printf("%v Removed %v",aura.name, event.fields[13])
+	//}
 
 }
+
+/*
+15:50:45.130  SPELL_AURA_REMOVED_DOSE,Player-1092-051BA200,"Loupeznik-BurningBlade",0x514,0x0,Player-1092-051BA200,"Loupeznik-BurningBlade",0x514,0x0,44544,"Fingers of Frost",0x10,BUFF,1
+*/
+func (lf *logFile) parseSpellAuraRemovedDose(event *wowEvent) {
+
+	source, dest := lf.currentEncounter.getSourceDestUnit(event)
+	//auraID, _ := strconv.Atoi(event.fields[9])
+	dose, _ := strconv.Atoi(event.fields[13])
+
+	//key := auraKey{auraID, source}
+	
+	aura := dest.getAura(event.fields[9:],source)
+	
+	auraEvent := auraEvent{event.eventTime, dose, 0}
+
+	aura.events = append(aura.events, auraEvent)
+	
+	
+	//	log.Printf("Removed Dose %v %v",auraID, event.fields[13])
+}
+
 
 //12/29 16:04:08.015  ENCOUNTER_START,1719,"Twin Ogron",17,25
 func (lf *logFile) parseEncounterStart(event *wowEvent) {
 
-	log.Printf("Encounter %v Start at %v", event.fields[2], event.eventTime)
-
+	//log.Print(event.fields)
+	
+	
 	lf.currentEncounter.EndTime = event.eventTime
-	lf.newEncounter(strings.Trim(event.fields[2], "\""))
+	lf.newEncounter(event.fields[2])
 	lf.currentEncounter.StartTime = event.eventTime
 	lf.currentEncounter.IsBoss = true
+	
+	diff, _ := strconv.ParseInt(event.fields[3],0,0)
+	lf.currentEncounter.Difficulty = int(diff)
+	
+	players, _ := strconv.ParseInt(event.fields[4],0,0)
+	lf.currentEncounter.Players = int(players)
+	
 	//lf.eventCount = make(eventMap)
 }
 
 //12/29 15:57:46.832  ENCOUNTER_END,1722,"Tectus, The Living Mountain",17,25,1
 func (lf *logFile) parseEncounterEnd(event *wowEvent) {
 
-	log.Printf("Encounter %v End at %v", event.fields[2], event.eventTime)
-
+	log.Printf("Finished encounter: %v", lf.currentEncounter.Name)
+	lf.currentEncounter.Live = false
 	lf.currentEncounter.EndTime = event.eventTime
+	
+	kill, _ := strconv.ParseInt(event.fields[5],0,0)
+	if int(kill) == 1 {
+		lf.currentEncounter.Kill = true
+		}
+	//log.Print(lf.currentEncounter)
+	
 	lf.newEncounter("trash")
 	lf.currentEncounter.StartTime = event.eventTime
+	
+	
 }
 
 func (lf *logFile) newEncounter(boss string) {
-
-	id := 0
+    
+	
+	newE := &encounter{}
+	newE.Name = boss
+	newE.ID = 0
+	newE.Live = true
 	if lf.currentEncounter != nil {
-		lf.encounters[lf.currentEncounter.StartTime] = lf.currentEncounter
-		id = lf.currentEncounter.ID + 1
+		newE.ID = lf.currentEncounter.ID + 1
 	}
-	lf.currentEncounter = new(encounter)
-	lf.currentEncounter.ID = id
-	lf.currentEncounter.Name = boss
-	lf.currentEncounter.UnitMap = make(UnitMap)
-	//lf.currentEncounter.PlayerMap = make(PlayerMap)
-
-	//spew.Dump("Encounter Start", event)
-
+	
+	newE.UnitMap = make(UnitMap)
+	
+	lf.encounters[newE.ID] = newE
+	lf.currentEncounter = newE
+	log.Printf("New encounter: %v", newE.Name)
 }
 
 func (u *wunit) getSpell(fields []string) *spell {
@@ -893,6 +936,25 @@ func (u *wunit) getSpell(fields []string) *spell {
 		u.spells[spellID] = s
 	}
 	return s
+}
+
+func (u *wunit) getAura (fields []string, source *wunit) *unitAura {
+	auraID, _ := strconv.Atoi(fields[0])
+
+	key := auraKey{auraID, source}
+	
+	aura, seen := u.auras[key]
+	
+	
+	if !seen {
+		aura = &unitAura{}
+		aura.name = fields[1]
+		school, _ := strconv.ParseInt(fields[2], 0, 0)
+		aura.school = school
+		aura.events = make([]auraEvent, 0, 10)
+		u.auras[key] = aura
+	}
+return aura
 }
 
 func (e *encounter) getSourceDestUnit(event *wowEvent) (*wunit, *wunit) {

@@ -5,7 +5,7 @@
 			<tr><th>Name</th><th>Damage</th><th>DPS</th></tr>
 		</thead>
 		<tbody>
-				<tr ui-sref="home.encounter.spells({e: e.ID, p: player.ID})" ng-repeat="player in e.PlayerDPS | orderBy:orderFunction">
+				<tr ui-sref="home.encounter.damage.spells({e: e.ID, p: player.ID})" class="dmg-animation-appear" ng-repeat="player in e.PlayerDPS | orderBy:orderFunction">
 					<td>{{player.Name}}</td>
 					<td>
 					<div style="width:{{barPercent(player.Damage)}}%" class="classBar bg-{{cssClass(player.Class)}}"></div>
