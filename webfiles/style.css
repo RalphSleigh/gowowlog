@@ -89,7 +89,7 @@ width:5%
 width:5%
 }
 
-#spellTable td img, #auraTable td img {
+#spellTable td img, #auraTable td img, .tableIcon {
 width:25px;
 padding:0px;
 margin: -6px 5px -3px -3px;

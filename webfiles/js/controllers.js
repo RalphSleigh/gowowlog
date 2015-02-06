@@ -1,6 +1,4 @@
 //this is just a small amount of static data we need in a handy place. Should modulerise but CBA...
-var WOW = {};
-WOW.cs = {"0":{"Display":"Creature","CSSClass":"c"},"1":{"Display":"Death Knight","CSSClass":"deathknight"},"2":{"Display":"Druid","CSSClass":"druid"},"3":{"Display":"Hunter","CSSClass":"hunter"},"4":{"Display":"Mage","CSSClass":"mage"},"5":{"Display":"Monk","CSSClass":"monk"},"6":{"Display":"Paladin","CSSClass":"paladin"},"7":{"Display":"Priest","CSSClass":"priest"},"8":{"Display":"Rogue","CSSClass":"rogue"},"9":{"Display":"Shamen","CSSClass":"shamen"},"10":{"Display":"Warlock","CSSClass":"warlock"},"11":{"Display":"Warrior","CSSClass":"warrior"}};
 
 
 
@@ -82,12 +80,32 @@ damageApp.config(function($stateProvider, $urlRouterProvider) {
 
 damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$interval', 'Dmg', function ($scope, $state, $stateParams, $interval, Dmg) {
    
-   
+   $scope.currentEncounter = {ID:0};
+   $scope.automatic = true;
    $scope.encounters = Dmg.Encounters.query()
    var refreshData = function() {
     // Assign to scope within callback to avoid data flickering on screen
 		Dmg.Encounters.query({}, function(dataElements){
+			//save data
 			$scope.encounters = dataElements;
+			
+			//if we have a new encounter, navigate to it, always update currentencounter with new duration/kill infomation
+			var max = $scope.currentEncounter;
+			var newCurrent  = $scope.currentEncounter;
+			angular.forEach($scope.encounters,function(value,index){
+				if(value.ID > max.ID) max = value;
+				if(value.ID == newCurrent.ID) newCurrent = value;
+			});
+			$scope.currentEncounter = newCurrent;
+			
+			if(max.ID != $scope.currentEncounter.ID && $scope.automatic) {
+				if($state.current.name == "home") {
+					$state.go("home.encounter."+$scope.pane,{e:max.ID});
+				} else {
+					$state.go($state.current,{e:max.ID});	
+				}
+				$scope.currentEncounter = max;
+			} 
 		});
 	};
 
@@ -122,6 +140,7 @@ damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$
   
    $scope.selectEncounter = function(encounter){
 	  //$scope.pane=pane;
+	  $scope.automatic = false;
 	  if($state.current.name == "home") {
 		  $state.go("home.encounter."+$scope.pane,{e:encounter.ID});
 		} else {
@@ -134,16 +153,7 @@ damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$
   $scope.orderFunction = function(e) {
 		return -(e.ID);
 	};
-   
-	$scope.setDropdownTitle = function(encounter) {
-	//	$scope.currentEncounter = encounter.Name;
-	};
-	/*
-	$scope.$on('encounterChange', function(e,name, id){
-		
-		$scope.currentEncounterID = id;
-	});
-	*/
+	
 	eval();//haxx
 }]);
 
@@ -251,10 +261,15 @@ damageApp.filter('prettyNum', function() {               // filter is a factory 
  damageApp.filter('minutes', function() {               // filter is a factory function
    return function(number) { 
 			var d = new Date(number/1000000);
-			return d.getMinutes()+':'+d.getSeconds().toPrecision(2);
+			return d.getMinutes()+':'+numeral(d.getSeconds()).format("00");
    }
  });
 
+  damageApp.filter('specIconString', function() {               // filter is a factory function
+   return function(spec) { 
+			return WOW.specInfo[spec].icon;
+   }
+ });
  
  
 damageApp.filter('schoolBG', function() {               // filter is a factory function

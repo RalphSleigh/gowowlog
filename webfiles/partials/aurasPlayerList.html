@@ -6,7 +6,7 @@
 		</thead>
 		<tbody>
 				<tr ui-sref="home.encounter.auras.display({e: e.ID, p: player.ID})" ng-repeat="player in e.PlayerDPS | orderBy:orderFunction">
-					<td>{{player.Name}}</td>
+					<td><img class="tableIcon" ng-src="icons/{{player.Spec | specIconString}}" />{{player.Name}}</td>
 				</tr>
 		</tbody>
 </table>

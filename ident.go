@@ -45,7 +45,7 @@ const (
 	SPEC_PALADIN_HOLY
 	SPEC_PALADIN_PROTECTION
 	SPEC_PALADIN_RETRIBUTION
-	SPEC_PRIEST_DESCIPLINE
+	SPEC_PRIEST_DISCIPLINE
 	SPEC_PRIEST_HOLY
 	SPEC_PRIEST_SHADOW
 	SPEC_ROGUE_ASSASSINATION
@@ -155,7 +155,7 @@ func (e *encounter) GetPlayerClassSpec(lf *logFile) {
 				unit.Spec = SPEC_PALADIN_RETRIBUTION
 			case 47666, 81700, 47750: //penance, archangel, more penance
 				unit.Class = CLASS_PRIEST
-				unit.Spec = SPEC_PRIEST_DESCIPLINE
+				unit.Spec = SPEC_PRIEST_DISCIPLINE
 			case 126135, 139, 34861: //lightwell, renew, circle of healing
 				unit.Class = CLASS_PRIEST
 				unit.Spec = SPEC_PRIEST_HOLY

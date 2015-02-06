@@ -106,15 +106,17 @@ type logFile struct {
 	currentEncounter *encounter
 	//petOwners        petMap
 	classIdent map[int]int
-	buffer []byte
+	parseSpeed float64
+	logTime time.Time
 }
 
-func NewLogFile(file *tail.Tail) *logFile {
+func NewLogFile(file *tail.Tail, speed float64) *logFile {
 	lf := new(logFile)
 	lf.file = file
+	lf.parseSpeed = speed
 	lf.encounters = make(encounterMap)
 	lf.eventCount = make(eventMap)
-	lf.buffer = make([]byte,2048,2048)
+	
 	//lf.petOwners = make(petMap)
 
 	return lf
@@ -122,16 +124,17 @@ func NewLogFile(file *tail.Tail) *logFile {
 
 func (lf *logFile) ParseLogFile() {
 
-	now := time.Now()
 	lf.newEncounter("trash")
 	n := 0
-	/*
-		scanner := bufio.NewScanner(lf.file)
-		for scanner.Scan() {
-
-		}
-	*/
-
+	//get time on first entry
+	firstLine :=  <-lf.file.Lines
+	
+	lf.ParseLine(firstLine.Text)
+	n++
+	
+	nowLog := lf.logTime
+	now := time.Now()
+	
 	for line := range lf.file.Lines {
 		if line.Err != nil {
 			log.Print(line.Err)
@@ -139,19 +142,24 @@ func (lf *logFile) ParseLogFile() {
 			}
 		
 		lf.ParseLine(line.Text)
-		//lf.ParseLine()
 
-		if n%10000 == 0 && n != 0 {
-			//log.Printf("Parsed %v lines",n)
+		if n%1000 == 0 && n != 0 {
+			thenLog := lf.logTime
 			then := time.Now()
+			durationLog := thenLog.Sub(nowLog)
 			duration := then.Sub(now)
 			speed := float64(n) / float64(duration/time.Second)
-			log.Printf("Parsed %v entries in %v seconds (%v/sec)", n, int(duration/time.Second), speed)
-			//time.Sleep(250 * time.Millisecond)
+			if n%10000 == 0 && n != 0 {
+				log.Printf("Parsed %v entries in %v seconds (%v/sec)", n, int(duration/time.Second), speed)
+			}
+			//are we going too fast?
+			if(lf.parseSpeed != 0 && float64(durationLog / duration) > lf.parseSpeed) {
+				log.Printf("Log seconds: %v real seconds:  %v, aim: %v current: %v",durationLog.Seconds(),duration.Seconds(),lf.parseSpeed, float64(durationLog / duration))
+				time.Sleep((durationLog / time.Duration(lf.parseSpeed)) - duration)//TODO calculate accurate sleep time: DONE
+			}
 		}
 		n++
 	}
-	log.Print("Hmm")
 }
 
 func quickerAlmostCSVParse(line string) []string {
@@ -250,7 +258,8 @@ func (lf *logFile) ParseLine(line string)  {
 	if err != nil {
 		log.Printf("Unable to parse time %v reason %v", timeandevent[0], err)
 	}
-
+	
+	lf.logTime = etime
 	event.eventTime = etime
 	//spew.Dump(err)
 
@@ -410,46 +419,6 @@ func (lf *logFile) parseSpellDamage(event *wowEvent) {
 
 	s.damageEvents = append(s.damageEvents, spellEvent{event.eventTime, target, damage, 0, false, crit, multi})
 	
-	/*
-	unit, _ := lf.currentEncounter.getSourceDestUnit(event)
-	
-	spellID, _ := strconv.Atoi(event.fields[9])
-
-	/*
-			type spellDamage struct {
-			nevents int
-			hdamage int
-			nhit int
-			tdamage int
-			ntick int
-			ncrit int
-			nmulit int
-		}
-
-
-	spellDamage, seen := unit.spells[spellID]
-
-	if !seen {
-		spellDamage.SpellName = strings.Trim(event.fields[10], `"`)
-		school, _ := strconv.ParseInt(event.fields[11], 0, 0)
-		spellDamage.School = school
-	}
-
-	spellDamage.Hdamage += damage
-
-	
-
-	//log.Printf("%x",event.fields[33])
-
-	//unit.spells[spellID] = spellDamage
-	/*
-		//lf.eventCount[event.fields[2]] += damage
-		//lf.eventCount[event.fields[2]] += overkill
-		//lf.eventCount[event.fields[2]] += absorb
-		if(event.fields[33] == "2") {
-			spew.Dump(event)
-			}
-	*/
 }
 
 /*
