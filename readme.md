@@ -5,10 +5,10 @@ Gowowlog is a combat log parser for WOW written in Go/AngularJS. Currently will 
 
 To use:
 
-1) Do whatever magic required to download/install, may/may not be "go get githib.com/ralphsleigh/gowowlog && go install githib.com/ralphsleigh/gowowlog"
-2) Make sure you have advanced combat logging turned on in WoW options -> system -> network
-3) Run gowowlog -logfile=/path/to/your/logfile
-4) Open http://localhost:8081/index.html in your web browser.
+1. Do whatever magic required to download/install, may/may not be "go get githib.com/ralphsleigh/gowowlog && go install githib.com/ralphsleigh/gowowlog"
+2. Make sure you have advanced combat logging turned on in WoW options -> system -> network
+3. Run gowowlog -logfile=/path/to/your/logfile
+4. Open http://localhost:8081/index.html in your web browser.
 
 If you don't get the interface, try specifying -webroot to the included webfiles directory. Its also helpful if the icons directory is writeable as a cache.
 
