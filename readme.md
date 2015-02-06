@@ -10,6 +10,8 @@ To use:
 3. Run gowowlog -logfile=/path/to/your/logfile
 4. Open http://localhost:8081/index.html in your web browser.
 
+Should look like [this](http://i.imgur.com/JPG3lzL.png)
+
 If you don't get the interface, try specifying -webroot to the included webfiles directory. Its also helpful if the icons directory is writeable as a cache.
 
 Known issues:
@@ -31,4 +33,6 @@ Not going todos currently:
 * Anything that requires centralised log data, e.g ranks, comparative performance.
 * Log uploaders.
 * Lots of making it user friendly.
+
+> Ralph Sleigh @Ralphsleigh Windweaver@EU-Xavius
 
