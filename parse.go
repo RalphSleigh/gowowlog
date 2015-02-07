@@ -210,6 +210,9 @@ func quickerAlmostCSVParse(line string) []string {
 				fields[fieldIndex] = strings.Replace(string(bytes[fieldStart : i-1]),`\"`,`"`,-1)
 			} else if !insideQuotes && hadQuotes == true{
 				fields[fieldIndex] = string(bytes[fieldStart:i-1])
+			} else if insideQuotes {  //ignore
+				//log.Print(string(bytes))
+				continue
 			} else {
 				fields[fieldIndex] = string(bytes[fieldStart:i])
 			}
@@ -328,6 +331,10 @@ func (lf *logFile) parseSpellCastSuccess(event *wowEvent) {
 	s.casts++
 
 	source.casts = append(source.casts, unitCast{s.id, s.name, event.eventTime})
+	
+	if s.id == 123904 {
+		log.Print(event)
+	}
 }
 
 /*
@@ -903,6 +910,8 @@ func (u *wunit) getSpell(fields []string) *spell {
 		s.damageEvents = make([]spellEvent, 0, 5)
 		s.healingEvents = make([]spellEvent, 0, 5)
 		u.spells[spellID] = s
+		
+		//log.Print(fields[1])
 	}
 	return s
 }

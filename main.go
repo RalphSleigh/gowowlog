@@ -155,7 +155,7 @@ func main() {
 	
 	//open log
 	//logFileReader, err := tail.TailFile(*logfile, tail.Config{Follow: true, Poll: true, RateLimiter: ratelimiter.NewLeakyBucket(1000, 1*time.Second)})
-	logFileReader, err := tail.TailFile(*logfile, tail.Config{Follow: true, Poll: true})
+	logFileReader, err := tail.TailFile(*logfile, tail.Config{Follow: true, Poll: true, MustExist:true})
 	
 	if err != nil {
 		log.Fatal("Cant open file")

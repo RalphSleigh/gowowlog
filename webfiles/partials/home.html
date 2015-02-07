@@ -4,11 +4,11 @@
 	<ul class="nav navbar-nav">
 		<li><a ng-click="selectPane('damage')">Damage</a></li>
 		<li><a ng-click="selectPane('auras')">Auras</a></li>
-		<li class="dropdown">
-			<a ng-if="!currentEncounter" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Encounter<span class="caret"></span></a>
-			<a ng-if="currentEncounter && !currentEncounter.Live && currentEncounter.Kill" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><b>{{currentEncounter.Name}} {{currentEncounter.Duration | minutes}}</b><span class="caret"></span></a>
-			<a ng-if="currentEncounter && !currentEncounter.Live && !currentEncounter.Kill" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{currentEncounter.Name}} {{currentEncounter.Duration | minutes}}<span class="caret"></span></a>
-			<a ng-if="currentEncounter && currentEncounter.Live" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{currentEncounter.Name}} - LIVE<span class="caret"></span></a>
+		<li class="dropdown"><!-- this is huge hack, make a directive?? -->
+			<a ng-if="currentEncounter.ID == 0" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Encounter<span class="caret"></span></a>
+			<a ng-if="currentEncounter.ID != 0 && !currentEncounter.Live && currentEncounter.Kill" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><b>{{currentEncounter.Name}} {{currentEncounter.Duration | minutes}}</b><span class="caret"></span></a>
+			<a ng-if="currentEncounter.ID != 0 && !currentEncounter.Live && !currentEncounter.Kill" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{currentEncounter.Name}} {{currentEncounter.Duration | minutes}}<span class="caret"></span></a>
+			<a ng-if="currentEncounter.ID != 0 && currentEncounter.Live" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{currentEncounter.Name}} - LIVE<span class="caret"></span></a>
 			<ul class="dropdown-menu" role="menu">
 				<li ng-repeat="encounter in encounters | orderBy:orderFunction">
 					<a ng-if="!encounter.Live && encounter.Kill" ng-click="selectEncounter(encounter)"><b>{{encounter.Name}} {{encounter.Duration | minutes}}</b></a>
