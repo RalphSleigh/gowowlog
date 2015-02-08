@@ -18,7 +18,7 @@ type playerDPS struct {
 	DPS    int
 }
 
-func (e *encounter) GetPlayerDPS(lf *logFile) []playerDPS {
+func (e *encounter) GetPlayerDPS(lf *logFile, healing bool) []playerDPS {
 
 	//log.Printf("%v %v %v", e.StartTime, e.EndTime, e.IsBoss)
 
@@ -31,9 +31,9 @@ func (e *encounter) GetPlayerDPS(lf *logFile) []playerDPS {
 		if !unit.isPlayer {
 			continue
 		}
-		playerDamage := unit.getUnitDamageTotal()
+		playerDamage := unit.getUnitDamageTotal(healing)
 		for _, pet := range unit.pets {
-			playerDamage += pet.getUnitDamageTotal()
+			playerDamage += pet.getUnitDamageTotal(healing)
 		}
 		result = append(result, playerDPS{id, unit.name, unit.Class, unit.Spec, playerDamage, playerDamage / int(duration.Seconds())})
 	}
@@ -41,7 +41,7 @@ func (e *encounter) GetPlayerDPS(lf *logFile) []playerDPS {
 	return result
 }
 
-func (u *wunit) getUnitDamageTotal() int {
+func (u *wunit) getUnitDamageTotal(healing bool) int {
 
 	if u == nil {
 		return 0 //pet that never appeared in UnitMap cause no events
@@ -49,7 +49,12 @@ func (u *wunit) getUnitDamageTotal() int {
 	var totalDamage int
 
 	for _, spell := range u.spells {
-		for _, e  := range spell.damageEvents {
+		i := spell.damageEvents
+		if healing {
+			i = spell.healingEvents
+		}
+		
+		for _, e  := range i {
 			totalDamage += e.amount
 			totalDamage += e.absorb
 		}

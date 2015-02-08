@@ -275,6 +275,8 @@ func (lf *logFile) ParseLine(line string)  {
 		lf.parseSpellPeriodicDamage(event)
 	case "SPELL_HEAL":
 		lf.parseSpellHeal(event)
+	case "SPELL_PERIODIC_HEAL":
+		lf.parseSpellPeriodicHeal(event)
 	case "SPELL_ABSORBED":
 		lf.parseSpellAbsorbed(event)
 	case "SWING_DAMAGE_LANDED":
@@ -283,7 +285,7 @@ func (lf *logFile) ParseLine(line string)  {
 		lf.parseSpellSummon(event)
 	case "SPELL_AURA_APPLIED":
 		lf.parseSpellAuraApplied(event)
-		case "SPELL_AURA_APPLIED_DOSE":
+	case "SPELL_AURA_APPLIED_DOSE":
 		lf.parseSpellAuraAppliedDose(event)
 	case "SPELL_AURA_REMOVED":
 		lf.parseSpellAuraRemoved(event)
@@ -331,10 +333,6 @@ func (lf *logFile) parseSpellCastSuccess(event *wowEvent) {
 	s.casts++
 
 	source.casts = append(source.casts, unitCast{s.id, s.name, event.eventTime})
-	
-	if s.id == 123904 {
-		log.Print(event)
-	}
 }
 
 /*
@@ -469,7 +467,8 @@ Player-1588-0764CBDF,
 160000,
 3550.25,
 7960.95,
-638,25427,
+638,
+25427,
 25427,
 0,
 nil,
@@ -483,9 +482,11 @@ func (lf *logFile) parseSpellHeal(event *wowEvent) {
 	
 	damage, _ := strconv.Atoi(event.fields[24])
 	
-	crit := event.fields[26] == "1"
-	multi := event.fields[27] == "1"
+	crit := event.fields[27] == "1"
+	multi := event.fields[28] == "1"
 
+	//log.Printf("crit: %v, multi: %v, fields: %v", crit, multi, event.fields[26:]) 
+	
 	s.healingEvents = append(s.healingEvents, spellEvent{event.eventTime, target, damage, 0, false, crit, multi})
 	/*
 			type spellDamage struct {
@@ -497,34 +498,28 @@ func (lf *logFile) parseSpellHeal(event *wowEvent) {
 			ncrit int
 			nmulit int
 		}
+*/
 
-
-	spellHeal, seen := unit.spells[spellID]
-
-	if !seen {
-		spellDamage.SpellName = strings.Trim(event.fields[10], `"`)
-		school, _ := strconv.ParseInt(event.fields[11], 0, 0)
-		spellDamage.School = school
-	}
-
-	spellDamage.Hdamage += damage
-
-	if event.fields[33] == "1" {
-		spellDamage.Nmulti++
-
-	} else {
-		spellDamage.Nhits++
-	}
-
-	if event.fields[30] == "1" {
-		spellDamage.Ncrit++
-	}
-
-	//log.Printf("%x",event.fields[33])
-
-	unit.spells[spellID] = spellDamage
-	*/
 }
+
+/*
+12/29 15:55:22.753  SPELL_PERIODIC_HEAL,Player-1389-069FF344,"Novie-Terokkar",0x514,0x0,Player-1313-04554800,"Prettytough-Wildhammer",0x40512,0x0,155777,"Rejuvenation (Germination)",0x8,Player-1313-04554800,281976,358044,5402,597,6117,6,19,1000,3543.63,7956.57,639,3661,0,0,nil,nil
+
+*/
+
+func (lf *logFile) parseSpellPeriodicHeal(event *wowEvent) {
+
+	source, target := lf.currentEncounter.getSourceDestUnit(event)
+	s := source.getSpell(event.fields[9:12])
+	
+	damage, _ := strconv.Atoi(event.fields[24])
+	
+	crit := event.fields[27] == "1"
+	multi := event.fields[28] == "1"
+
+	s.healingEvents = append(s.healingEvents, spellEvent{event.eventTime, target, damage, 0, true, crit, multi})
+}
+
 /*
 12/29 16:00:03.441  SPELL_ABSORBED,
 Creature-0-3769-1228-16363-82519-0002A17824, Source
@@ -582,7 +577,7 @@ func (lf *logFile) parseSpellAbsorbed(event *wowEvent) {
 		//now healing
 		caster := lf.currentEncounter.getUnitFromFields(event.fields[12:14])
 		cs := caster.getSpell(event.fields[16:19])
-		cs.healingEvents = append(s.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
+		cs.healingEvents = append(cs.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
 		//we need an aura event too
 		
 		aura := target.getAura(event.fields[16:], caster)//should always have been seen.
@@ -605,7 +600,7 @@ func (lf *logFile) parseSpellAbsorbed(event *wowEvent) {
 		//now healing
 		caster := lf.currentEncounter.getUnitFromFields(event.fields[9:11])
 		cs := caster.getSpell(event.fields[13:16])
-		cs.healingEvents = append(s.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
+		cs.healingEvents = append(cs.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
 		//we need an aura event too
 		
 		aura := target.getAura(event.fields[13:], caster)
@@ -833,8 +828,6 @@ func (lf *logFile) parseSpellAuraRemovedDose(event *wowEvent) {
 
 	aura.events = append(aura.events, auraEvent)
 	
-	
-	//	log.Printf("Removed Dose %v %v",auraID, event.fields[13])
 }
 
 

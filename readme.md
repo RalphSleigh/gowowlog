@@ -19,8 +19,8 @@ Known issues:
 * Shuffle/other friendly fire shows up as damage, probably should not.
 * Some pets are unaccounted for and need owners.
 * Spec detection for a few specs is not working. No attempt at the moment to diff Glad/Prot Warriors
-* Need to finish live updates on encounters in progress. 
 * Many many ignored errors, leading to panics. concurrent map access is undefined, should fix that.
+* Healing does not match {{log site}}, no idea why..
 
 Todos:
 

@@ -1,8 +1,11 @@
 
 
-damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$interval', 'Dmg', function ($scope, $state, $stateParams, $interval, Dmg) {
+damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$interval', 'Dmg', 'DmgAppState', function ($scope, $state, $stateParams, $interval, Dmg, DmgAppState) {
    
-   $scope.currentEncounter = {ID:0};
+   //$scope.currentEncounter = {ID:0};
+   DmgAppState.setStateFromURL();//
+   $scope.state =  DmgAppState.getState();
+   
    $scope.automatic = true;
    $scope.encounters = Dmg.Encounters.query()
    var refreshData = function() {
@@ -12,21 +15,17 @@ damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$
 			$scope.encounters = dataElements;
 			
 			//if we have a new encounter, navigate to it, always update currentencounter with new duration/kill infomation
-			var max = $scope.currentEncounter;
-			var newCurrent  = $scope.currentEncounter;
+			var max = $scope.state.encounter;
+			var newCurrent  = $scope.state.encounter;
 			angular.forEach($scope.encounters,function(value,index){
 				if(value.ID > max.ID) max = value;
 				if(value.ID == newCurrent.ID) newCurrent = value;
 			});
-			$scope.currentEncounter = newCurrent;
+			DmgAppState.setCurrentEncounter(newCurrent);
+			//$scope.currentEncounter = newCurrent;
 			
-			if(max.ID != $scope.currentEncounter.ID && $scope.automatic) {
-				if($state.current.name == "home") {
-					$state.go("home.encounter."+$scope.pane,{e:max.ID});
-				} else {
-					$state.go($state.current,{e:max.ID});	
-				}
-				$scope.currentEncounter = max;
+			if(max.ID != $scope.state.encounter.ID && $scope.automatic) {
+				DmgAppState.setCurrentEncounter(max);
 			} 
 		});
 	};
@@ -49,6 +48,8 @@ damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$
   $scope.pane="damage";
   
   $scope.selectPane = function(pane){
+	  DmgAppState.setPane(pane);
+	  /*
 	  if(pane == "damage") {
 			$state.go("home.encounter.damage.spells",$state.params);
 	  } else if (pane == "auras") {
@@ -58,18 +59,13 @@ damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$
 	  //$state.go(targetState);
 	  $scope.pane=pane;
 	//$state.go("home.encounter."+pane);
+	*/
   };
   
    $scope.selectEncounter = function(encounter){
 	  //$scope.pane=pane;
 	  $scope.automatic = false;
-	  if($state.current.name == "home") {
-		  $state.go("home.encounter."+$scope.pane,{e:encounter.ID});
-		} else {
-			$state.go($state.current,{e:encounter.ID});	
-		}
-	  
-	  $scope.currentEncounter = encounter;
+	  DmgAppState.setCurrentEncounter(encounter);
   };
   
   $scope.orderFunction = function(e) {
@@ -79,25 +75,47 @@ damageApp.controller('EncounterListCtrl', ['$scope', '$state','$stateParams', '$
 	eval();//haxx
 }]);
 
-damageApp.controller('EncounterDetails', ['$scope', '$stateParams' ,'Dmg', function ($scope, $stateParams, Dmg) {
+damageApp.controller('DamageMenu', ['$scope', 'DmgAppState', function ($scope, DmgAppState) {
+	$scope.state =  DmgAppState.getState(); 
 	
-   //var  res = r('/encounters');
-   //$scope.$parent.
-  $scope.e = Dmg.Encounters.get({e:$stateParams.e});
+	$scope.selectDamageHealing = function(d){
+	  DmgAppState.setDamageHealing(d);
+  };
+  
+   $scope.selectDamageSpellTarget = function(d){
+	  DmgAppState.setDamageSpellTarget(d);
+  };
+}]);
+
+
+damageApp.controller('EncounterDetails', ['$scope', '$stateParams' ,'Dmg', 'DmgAppState', function ($scope, $stateParams, Dmg, DmgAppState) {
+	
+
+  $scope.state =  DmgAppState.getState(); 
+  $scope.e = Dmg.Encounters.get({e:$scope.state.encounter.ID});
+  
   $scope.orderFunction = function(e) {
    return -(e.Damage);
-  }
+  };
+  
   $scope.barPercent = function(damage) {
 		if(!damage)return 0;
 		var maxDamage = 0;
-		angular.forEach($scope.e.PlayerDPS,function(value,index){
+		var each = $scope.e.PlayerDPS;
+		if($scope.state.damage.d == "Healing")each = $scope.e.PlayerHealing;
+		angular.forEach(each,function(value,index){
 			maxDamage = Math.max(maxDamage, value.Damage);
 		});
 		return damage * 70/maxDamage
-	}
+	};
+	
   $scope.cssClass = function(unitClass) {
 	return WOW.cs[unitClass].CSSClass;
-	}
+	};
+	
+  $scope.setPlayer = function(p) {
+	  DmgAppState.setCurrentPlayer(p);
+  }
 	/*
   $scope.$watch('e.Name', function() { //May be a HACK
 	$scope.$emit('encounterChange', $scope.e.Name,$scope.e.ID);
@@ -105,7 +123,36 @@ damageApp.controller('EncounterDetails', ['$scope', '$stateParams' ,'Dmg', funct
 	*/
 }]);
 
-damageApp.controller('PlayerDetails', ['$scope', '$stateParams' ,'Dmg', function ($scope, $stateParams, Dmg) {
+damageApp.controller('PlayerDetails', ['$scope', '$stateParams' ,'Dmg', 'DmgAppState', function ($scope, $stateParams, Dmg, DmgAppState) {
+  $scope.state =  DmgAppState.getState(); 
+   //var  res = r('/encounters');
+  $scope.unit = Dmg.Spells.get({e:$stateParams.e,p:$stateParams.p});
+  //if($scope.state.damage.d == "damage")$scope.unit.Spells = $scope.unit.Damage;
+  //if($scope.state.damage.d == "healing")$scope.unit.Spells = $scope.unit.Healing;
+  
+  $scope.unitDamage = function() {
+		var damage = 0;
+		angular.forEach($scope.unit[$scope.state.damage.d],function(value,index){
+			damage += (value.Damage+value.Absorb);
+		});
+		return damage;
+	}
+
+  $scope.maxSpellDamage = function() {
+		var damage = 0;
+		angular.forEach($scope.unit[$scope.state.damage.d],function(value,index){
+			damage = Math.max(value.Damage+value.Absorb,damage);
+		});
+		return damage;
+	}
+	
+	$scope.orderFunction = function(e) {
+		return -(e.Damage+e.Absorb);
+	};
+
+}]);
+
+damageApp.controller('DamageTargets', ['$scope', '$stateParams' ,'Dmg', function ($scope, $stateParams, Dmg) {
 	
    //var  res = r('/encounters');
   $scope.unit = Dmg.Spells.get({e:$stateParams.e,p:$stateParams.p});
@@ -132,10 +179,11 @@ damageApp.controller('PlayerDetails', ['$scope', '$stateParams' ,'Dmg', function
 
 }]);
 
-damageApp.controller('AuraPlayerDetails', ['$scope', '$stateParams' ,'Dmg', function ($scope, $stateParams, Dmg) {
+
+damageApp.controller('AuraPlayerDetails', ['$scope', '$stateParams' ,'Dmg', 'DmgAppState', function ($scope, $stateParams, Dmg, DmgAppState) {
 	
-   //var  res = r('/encounters');
-   //$scope.$parent.
+  $scope.state =  DmgAppState.getState(); 
+   
   $scope.e = Dmg.Encounters.get({e:$stateParams.e});
   $scope.orderFunction = function(e) {
    return -(e.Damage);
@@ -144,6 +192,9 @@ damageApp.controller('AuraPlayerDetails', ['$scope', '$stateParams' ,'Dmg', func
   $scope.cssClass = function(unitClass) {
 	return WOW.cs[unitClass].CSSClass;
 	}
+  $scope.setPlayer = function(p) {
+	  DmgAppState.setCurrentPlayer(p);
+  }
 	/*
   $scope.$watch('e.Name', function() { //May be a HACK
 	$scope.$emit('encounterChange', $scope.e.Name,$scope.e.ID);

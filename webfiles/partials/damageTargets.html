@@ -14,7 +14,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="spell in unit[state.damage.d] | orderBy:orderFunction">
+				<tr ng-repeat="spell in unit.Spells | orderBy:orderFunction">
 					<td><img ng-src="icons/{{spell.SpellID}}" />{{spell.SpellName}}</td>
 					<td><div style="width:{{spell.Damage * 70/maxSpellDamage() }}%;{{spell.School | schoolBG}}" class="classBar"></div><div style="width:{{spell.Absorb * 70/maxSpellDamage() }}%;{{spell.School | schoolBG}}" class="classBar"></div>{{spell.Damage | prettyNum}} ({{spell.Absorb | prettyNum}})</td>
 					<td>{{(spell.Damage+spell.Absorb) * 100/unitDamage() | prettyNum }}</td>

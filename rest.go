@@ -152,9 +152,58 @@ func RESTAuraDetails(c *appContext, w http.ResponseWriter, r *http.Request) (int
 	return http.StatusOK, nil
 }
 
+type RESTSpellResponse struct {
+	SpellID int
+	SpellName string
+	School int64
+	Damage int
+	Absorb int
+	Casts int
+	Hits int
+	Ticks int
+	Crits int
+	Multis int
+}
+
+func (sp *RESTSpellResponse) add(e spellEvent) {
+	
+	/*
+	type spellEvent struct {
+	time time.Time
+	target *wunit
+	amount int
+	absorb int
+	tick bool
+	crit bool
+	multi bool
+	}
+	*/
+	
+	sp.Damage += e.amount
+	sp.Absorb += e.absorb
+	
+	if e.multi {
+		sp.Multis++
+	}
+	
+	if e.crit {
+		sp.Crits++
+	}
+		
+	if e.tick && !e.multi {
+		sp.Ticks++
+	}
+	
+	if !e.tick && !e.multi {
+		sp.Hits++
+	}
+	
+	//return sp
+}
 
 type RESTSpellsDetailsResponse struct {
-	Spells []spellResponse
+	Damage []RESTSpellResponse
+	Healing []RESTSpellResponse
 	//Casts  []unitCast
 	Unit   string
 }
@@ -178,16 +227,18 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 		return http.StatusNotFound, errors.New("Player not found")
 	}
 	
-	combinedMap := make(map[string]*spellResponse)
+	combinedMapDamage := make(map[string]*RESTSpellResponse)
+	combinedMapHealing := make(map[string]*RESTSpellResponse)
+
 
 	//log.Print(u)
 
 	for id, s := range u.spells {
 		
-		sR, ok := combinedMap[s.name]
+		sR, ok := combinedMapDamage[s.name]
 		if !ok {
-			sR = &spellResponse{SpellID: id, SpellName: s.name, School:s.school, Casts: s.casts}
-			combinedMap[s.name] = sR
+			sR = &RESTSpellResponse{SpellID: id, SpellName: s.name, School:s.school, Casts: s.casts}
+			combinedMapDamage[s.name] = sR
 		} else {
 			sR.Casts += s.casts
 		}
@@ -195,15 +246,28 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 			sR.add(e)
 		}
 		
+		sRH, okH := combinedMapHealing[s.name]
+		if !okH {
+			sRH = &RESTSpellResponse{SpellID: id, SpellName: s.name, School:s.school, Casts: s.casts}
+			combinedMapHealing[s.name] = sRH
+		} else {
+			sR.Casts += s.casts
+		}
+		for _,e := range s.healingEvents {	
+			sRH.add(e)
+		}
+		
+
+		
 	}
 
 	for _, pet := range u.pets {
 		for id, s := range pet.spells {
 			petSpellName := pet.name + " - " + s.name
-			sR, ok := combinedMap[petSpellName]
+			sR, ok := combinedMapDamage[petSpellName]
 			if !ok {
-				sR = &spellResponse{SpellID: id, SpellName: petSpellName, School:s.school, Casts: s.casts}
-				combinedMap[petSpellName] = sR
+				sR = &RESTSpellResponse{SpellID: id, SpellName: petSpellName, School:s.school, Casts: s.casts}
+				combinedMapDamage[petSpellName] = sR
 			}
 			for _,e := range s.damageEvents {	
 				sR.add(e)
@@ -211,13 +275,32 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 		}
 	}
 	
-	resp := make([]spellResponse,0,len(combinedMap))
+	for _, pet := range u.pets {
+		for id, s := range pet.spells {
+			petSpellName := pet.name + " - " + s.name
+			sR, ok := combinedMapHealing[petSpellName]
+			if !ok {
+				sR = &RESTSpellResponse{SpellID: id, SpellName: petSpellName, School:s.school, Casts: s.casts}
+				combinedMapHealing[petSpellName] = sR
+			}
+			for _,e := range s.healingEvents {	
+				sR.add(e)
+			}
+		}
+	}
 	
-	for _,v := range combinedMap {
+	resp := make([]RESTSpellResponse,0,len(combinedMapDamage))
+	respH := make([]RESTSpellResponse,0,len(combinedMapHealing))
+	
+	for _,v := range combinedMapDamage {
 		resp = append(resp, *v)
 	}
 	
-	js, _ := json.Marshal(RESTSpellsDetailsResponse{resp,vars["pID"]})
+	for _,v := range combinedMapHealing {
+		respH = append(respH, *v)
+	}
+	
+	js, _ := json.Marshal(RESTSpellsDetailsResponse{resp,respH, vars["pID"]})
 	w.Write(js)
 	return http.StatusOK, nil
 
@@ -239,6 +322,7 @@ type restEncounterDetails struct {
 		EndTime   time.Time
 		Duration  time.Duration
 		PlayerDPS []playerDPS
+		PlayerHealing []playerDPS
 } 
 
 func RESTEncounterDetails(c *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
@@ -255,7 +339,7 @@ func RESTEncounterDetails(c *appContext, w http.ResponseWriter, r *http.Request)
 	v.GetPlayerClassSpec(c.lf)
 
 
-	resp := restEncounterDetails{v.ID, v.Name, v.StartTime, v.EndTime, v.EndTime.Sub(v.StartTime), v.GetPlayerDPS(c.lf)}
+	resp := restEncounterDetails{v.ID, v.Name, v.StartTime, v.EndTime, v.EndTime.Sub(v.StartTime), v.GetPlayerDPS(c.lf, false),v.GetPlayerDPS(c.lf, true)}
 	
 	
 	js, _ := json.Marshal(resp)

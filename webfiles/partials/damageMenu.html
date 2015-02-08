@@ -1,0 +1,20 @@
+<ul class="nav navbar-nav">
+<li><p class="navbar-text">Show</p></li>
+</ul>
+<div class="nav navbar-nav">
+<div class="btn-group navbar-btn" role="group">
+  <button ng-class="{active: state.damage.d == 'Damage'}" ng-click="selectDamageHealing('Damage')" type="button" class="btn btn-default">Damage</button>
+  <button ng-class="{active: state.damage.d == 'Healing'}" ng-click="selectDamageHealing('Healing')" type="button" class="btn btn-default">Healing</button>
+</div>
+</div>
+<ul class="nav navbar-nav">
+<li><p class="navbar-text">By</p></li>
+</ul>
+<div class="nav navbar-nav">
+<div class="btn-group navbar-btn" role="group">
+  <button ng-class="{active: state.damage.t == 'spells'}" type="button" ng-click="selectDamageSpellTarget('spells')" class="btn btn-default">Spell</button>
+  <button ng-class="{active: state.damage.t == 'targets'}"type="button" ng-click="selectDamageSpellTarget('targets')" class="btn btn-default">Target</button>
+</div>
+</div>
+
+
