@@ -3,14 +3,6 @@ body {
 	margin: 20px 10px 0px 10px;
 }
 
-#encounterTitle {
-text-align: center;
-font-size: 200%;
-}
-
-#encounterTitle  .current{
-font-size: 150%
-}
 
 .bg-c {
  background:#ff0000;
@@ -49,19 +41,55 @@ font-size: 150%
 .bg-warrior {
  background:#C79C6E
 }
-#dpsTable td, #spellTable td, #auraTable td {
+
+.colour-deathknight {
+ color:#C41F3B !important
+}
+.colour-druid {
+ color:#FF7D0A  !important
+}
+.colour-hunter {
+ color:#ABD473 !important
+}
+.colour-mage {
+ color:#69CCF0 !important
+}
+.colour-monk { 
+ color:#00FF96 !important
+}
+.colour-paladin {
+ color:#F58CBA !important
+}
+.colour-priest {
+ color:#FFFFFF !important
+}
+.colour-rogue {
+ color:#FFF569 !important
+}
+.colour-shamen {
+ color:#0070DE !important
+}
+.colour-warlock {
+ color:#9482C9 !important
+}
+.colour-warrior {
+ color:#C79C6E !important
+}
+
+
+#dpsTable td, #spellTable td, #auraTable td, #damageTargetTable td {
 white-space: nowrap;
 }
 
 
 #dpsTable table col:nth-child(1) {
-width:30%
+width:20%
 }
 #dpsTable table col:nth-child(2) {
-width:60%;
+//width:60%;
 }
 #dpsTable table col:nth-child(3) {
-width:10%
+width:5%;
 }
 
 #spellTable table col:nth-child(1) {
@@ -128,7 +156,7 @@ width:100%;
 
 #auraTable .bar {
 position: absolute;
-//background: #990000;
+//color: #990000;
 height:19px;
 }
 
@@ -141,8 +169,26 @@ height:19px;
 }
 
 
-#dpsTable table td:first-child + td, #spellTable table td:first-child + td ,#spellTable table th:first-child + th{
+#dpsTable table td:first-child + td, #spellTable table td:first-child + td ,#damageTargetTable table td:first-child + td ,#spellTable table th:first-child + th{
 text-align: right; 
+}
+
+#damageTargetTable table col:nth-child(1) {
+width:20%
+}
+#damageTargetTable table col:nth-child(2) {
+width:70%;
+}
+#damageTargetTable table col:nth-child(3) {
+width:10%
+}
+
+#damageTargetTable .classBar {
+//color:#ff0000;
+}
+
+#damageTargetTable .classBar:nth-child(even) {
+opacity:0.5;
 }
 
 .classBar {
@@ -154,13 +200,13 @@ height:1.2em;
 opacity:0.5;
 }
 
-#spellTable .classbar, .spellbackground-0{
-background: #ffffff;
+#spellTable .classbar, .spellcolor-0{
+color: #ffffff;
 }
 
 #castTimeline .fullLine {
 
-	background:#353A41;
+	color:#353A41;
 	height: 50px;
 	border-left:1px solid #aaaaaa;
 	border-right:1px solid #aaaaaa;
@@ -199,8 +245,8 @@ padding-right:10px;
 
 #castTimeline  .zoomInner {
 	position:relative;
-	background-image: url("zoombg.png");
-    background-repeat: repeat-x;
+	color-image: url("zoombg.png");
+    color-repeat: repeat-x;
 	height: 50px;
 	
 }

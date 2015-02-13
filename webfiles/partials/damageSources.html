@@ -2,15 +2,15 @@
 <table class="table table-condensed table-striped table-hover">
 	<colgroup><col><col><col></colgroup>
 		<thead>
-			<tr><th>Name</th><th>{{state.damage.d == "Damage" ? 'Damage' : 'Healing'}}</th><th>{{state.damage.d == "Damage" ? 'DPS' : 'HPS'}}</th></tr>
+			<tr><th>Name</th><th>Damage</th><th>DPS</th></tr>
 		</thead>
 		<tbody>
-				<tr ng-class="{active: player.ID === state.player.ID}" ng-click="setPlayer(player)" class="dmg-animation-appear" ng-repeat="player in PlayerList() | orderBy:orderFunction">
+				<tr ng-repeat="player in units | orderBy:orderFunction">
 					<td><img class="tableIcon" ng-src="icons/{{player.Spec | specIconString}}" />{{player.Name}}</td>
 					<td>
 					<div style="width:{{barPercent(player.Damage)}}%" class="classBar bg-{{cssClass(player.Class)}}"></div>
 					{{player.Damage | prettyNum}}</td>
-					<td>{{(player.Damage * 1000000000/state.e.Duration) | prettyNum}}</td>
+					<td>{{(player.Damage * 1000000000/state.encounter.Duration) | prettyNum}}</td>
 				</tr>
 		</tbody>
 </table>

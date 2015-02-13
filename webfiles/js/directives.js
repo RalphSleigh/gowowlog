@@ -1,6 +1,22 @@
 //OOPS actually has filters.
 
 
+damageApp.filter('orderObjectBy', function() {
+  return function(items, field, reverse) {
+    var filtered = [];
+    angular.forEach(items, function(item) {
+      filtered.push(item);
+    });
+    filtered.sort(function (a, b) {
+      return (a[field] > b[field] ? 1 : -1);
+    });
+    if(reverse) filtered.reverse();
+    return filtered;
+  };
+});
+
+
+
 damageApp.filter('prettyNum', function() {               // filter is a factory function
    return function(number) { 
 			if (number < 1000) return numeral(number).format("00.00");

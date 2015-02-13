@@ -1,20 +1,63 @@
 <ul class="nav navbar-nav">
-<li><p class="navbar-text">Show</p></li>
+
+<li class="dropdown">
+					<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{sourceName(state.damage.s)}}<span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+						<li><a  ng-click="selectDamageSource('all')">All</a></li>
+						<li class="divider"></li>
+						<li ng-repeat="p in e.PlayerDPS">
+							<a ng-click="selectDamageSource(p)" class="colour-{{cssClass(p.Class)}}">{{p.Name}}</a>
+						</li>
+					</ul>
+				</li>
 </ul>
+
 <div class="nav navbar-nav">
 <div class="btn-group navbar-btn" role="group">
-  <button ng-class="{active: state.damage.d == 'Damage'}" ng-click="selectDamageHealing('Damage')" type="button" class="btn btn-default">Damage</button>
-  <button ng-class="{active: state.damage.d == 'Healing'}" ng-click="selectDamageHealing('Healing')" type="button" class="btn btn-default">Healing</button>
+  <button ng-class="{active: state.damage.l == 'source'}" ng-click="selectDamageListBy('source')" type="button" class="btn btn-default">Source</button>
+  <button ng-class="{active: state.damage.l == 'target'}" ng-click="selectDamageListBy('target')" type="button" class="btn btn-default">Target</button>
+  <button ng-class="{active: state.damage.l == 'spell'}" ng-click="selectDamageListBy('ability')" type="button" class="btn btn-default">Spell</button>
 </div>
 </div>
+
+<ul class="nav navbar-nav">
+
+<li class="dropdown">
+					<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{targetName(state.damage.t)}}<span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+						<li><a  ng-click="selectDamageTarget('all')">All</a></li>
+						<li class="divider"></li>
+						<li ng-repeat="p in e.targetNames | orderBy:'Name'">
+							<a ng-click="selectDamageTarget(p)">{{p.Name}}</a>
+						</li>
+
+					</ul>
+				</li>
+</ul>
+
+<!--
+<ul class="nav navbar-nav">
+<li><p class="navbar-text">&nbsp;</p></li>
+</ul>
+
+<div class="nav navbar-nav">
+<div class="btn-group navbar-btn" role="group">
+  <button ng-class="{active: state.damage.t == 'spells'}" type="button" ng-click="selectDamageDoneTaken('Done')" class="btn btn-default">Done</button>
+  <button ng-class="{active: state.damage.t == 'targets'}"type="button" ng-click="selectDamageDoneTaken('Taken')" class="btn btn-default">Taken</button>
+</div>
+</div>
+
 <ul class="nav navbar-nav">
 <li><p class="navbar-text">By</p></li>
 </ul>
+
 <div class="nav navbar-nav">
 <div class="btn-group navbar-btn" role="group">
   <button ng-class="{active: state.damage.t == 'spells'}" type="button" ng-click="selectDamageSpellTarget('spells')" class="btn btn-default">Spell</button>
   <button ng-class="{active: state.damage.t == 'targets'}"type="button" ng-click="selectDamageSpellTarget('targets')" class="btn btn-default">Target</button>
 </div>
 </div>
+-->
+
 
 

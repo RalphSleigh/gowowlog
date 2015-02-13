@@ -31,9 +31,9 @@ func (e *encounter) GetPlayerDPS(lf *logFile, healing bool) []playerDPS {
 		if !unit.isPlayer {
 			continue
 		}
-		playerDamage := unit.getUnitDamageTotal(healing)
+		playerDamage := unit.getUnitDamageTotal(e.UnitMap, false)
 		for _, pet := range unit.pets {
-			playerDamage += pet.getUnitDamageTotal(healing)
+			playerDamage += pet.getUnitDamageTotal(e.UnitMap, false)
 		}
 		result = append(result, playerDPS{id, unit.name, unit.Class, unit.Spec, playerDamage, playerDamage / int(duration.Seconds())})
 	}
@@ -41,6 +41,7 @@ func (e *encounter) GetPlayerDPS(lf *logFile, healing bool) []playerDPS {
 	return result
 }
 
+/*
 func (u *wunit) getUnitDamageTotal(healing bool) int {
 
 	if u == nil {
@@ -53,13 +54,39 @@ func (u *wunit) getUnitDamageTotal(healing bool) int {
 		if healing {
 			i = spell.healingEvents
 		}
-		
-		for _, e  := range i {
+
+		for _, e := range i {
 			totalDamage += e.amount
 			totalDamage += e.absorb
 		}
 	}
-	
+
+	return totalDamage
+}
+*/
+func (u *wunit) getUnitDamageTotal(targets UnitMap, pets bool) int {
+
+	if u == nil {
+		return 0 //pet that never appeared in UnitMap cause no events
+	}
+	var totalDamage int
+
+	for _, spell := range u.spells {
+
+		for _, e := range spell.damageEvents {
+			_, ok := targets[e.target.guid]
+			if ok {
+				totalDamage += e.amount
+				totalDamage += e.absorb
+			}
+		}
+	}
+
+	if pets {
+		for _, pet := range u.pets {
+			totalDamage += pet.getUnitDamageTotal(targets, false)
+		}
+	}
 	return totalDamage
 }
 
@@ -107,16 +134,16 @@ func (lf *logFile) sendEncounters(c *requestItem, d dataMap) {
 }
 */
 type spellResponse struct {
-	SpellID int
+	SpellID   int
 	SpellName string
-	School int64
-	Damage int
-	Absorb int
-	Casts int
-	Hits int
-	Ticks int
-	Crits int
-	Multis int
+	School    int64
+	Damage    int
+	Absorb    int
+	Casts     int
+	Hits      int
+	Ticks     int
+	Crits     int
+	Multis    int
 }
 
 type spellResponseList struct {
@@ -126,40 +153,41 @@ type spellResponseList struct {
 }
 
 func (sp *spellResponse) add(e spellEvent) {
-	
+
 	/*
-	type spellEvent struct {
-	time time.Time
-	target *wunit
-	amount int
-	absorb int
-	tick bool
-	crit bool
-	multi bool
-	}
+		type spellEvent struct {
+		time time.Time
+		target *wunit
+		amount int
+		absorb int
+		tick bool
+		crit bool
+		multi bool
+		}
 	*/
-	
+
 	sp.Damage += e.amount
 	sp.Absorb += e.absorb
-	
+
 	if e.multi {
 		sp.Multis++
 	}
-	
+
 	if e.crit {
 		sp.Crits++
 	}
-		
+
 	if e.tick && !e.multi {
 		sp.Ticks++
 	}
-	
+
 	if !e.tick && !e.multi {
 		sp.Hits++
 	}
-	
+
 	//return sp
 }
+
 /*
 func (lf *logFile) sendUnitSpells(c *requestItem, d dataMap) {
 
@@ -179,7 +207,7 @@ func (lf *logFile) sendUnitSpells(c *requestItem, d dataMap) {
 	//log.Print(u)
 
 	for id, s := range u.spells {
-		
+
 		sR, ok := combinedMap[s.name]
 		if !ok {
 			sR = &spellResponse{SpellID: id, SpellName: s.name, School:s.school, Casts: s.casts}
@@ -187,10 +215,10 @@ func (lf *logFile) sendUnitSpells(c *requestItem, d dataMap) {
 		} else {
 			sR.Casts += s.casts
 		}
-		for _,e := range s.damageEvents {	
+		for _,e := range s.damageEvents {
 			sR.add(e)
 		}
-		
+
 	}
 
 	for _, pet := range u.pets {
@@ -201,7 +229,7 @@ func (lf *logFile) sendUnitSpells(c *requestItem, d dataMap) {
 				sR = &spellResponse{SpellID: id, SpellName: petSpellName, School:s.school, Casts: s.casts}
 				combinedMap[petSpellName] = sR
 			}
-			for _,e := range s.damageEvents {	
+			for _,e := range s.damageEvents {
 				sR.add(e)
 			}
 		}
@@ -240,6 +268,7 @@ type AuraEventResponse struct {
 	Time   time.Duration
 	Stacks int
 }
+
 /*
 func (lf *logFile) sendUnitAuras(c *requestItem, d dataMap) {
 	t, _ := time.Parse(time.RFC3339, d["encounter"].(string))

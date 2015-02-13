@@ -20,7 +20,7 @@ Known issues:
 * Some pets are unaccounted for and need owners.
 * Spec detection for a few specs is not working. No attempt at the moment to diff Glad/Prot Warriors
 * Many many ignored errors, leading to panics. concurrent map access is undefined, should fix that.
-* Healing does not match {{log site}}, no idea why..
+* Healing does not match {{log site}}, need to look into overhealing
 
 Todos:
 

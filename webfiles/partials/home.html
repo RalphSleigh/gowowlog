@@ -4,7 +4,7 @@
 		<div class="navbar-inner">
 			<a class="navbar-brand" href="">Gowowlog</a>
 			<ul class="nav navbar-nav">
-				<li ng-class="{active: state.pane == 'damage'}"><a ng-click="selectPane('damage')">Damage</a></li>
+				<li ng-class="{active: state.pane == 'damage'}"><a ng-click="selectPane('damage')">Damage &amp; Healing</a></li>
 				<li ng-class="{active: state.pane == 'auras'}"><a ng-click="selectPane('auras')">Auras</a></li>
 				<li class="dropdown"><!-- this is huge hack, make a directive?? -->
 					<a ng-if="state.encounter.ID == 0" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Encounter<span class="caret"></span></a>

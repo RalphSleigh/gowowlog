@@ -23,6 +23,7 @@ type wunit struct {
 	guid     string
 	name     string
 	isPlayer bool
+	hostile  bool
 	Class    int
 	Spec     int
 	spells   unitSpells
@@ -58,37 +59,37 @@ type auraEvent struct {
 }
 
 type spellEvent struct {
-	time time.Time
+	time   time.Time
 	target *wunit
 	amount int
 	absorb int
-	tick bool
-	crit bool
-	multi bool
+	tick   bool
+	crit   bool
+	multi  bool
 }
 
 type spell struct {
-	id int
-	name string
-	school int64
-	casts int
-	damageEvents []spellEvent
+	id            int
+	name          string
+	school        int64
+	casts         int
+	damageEvents  []spellEvent
 	healingEvents []spellEvent
 }
 
 type unitSpells map[int]*spell
 
 type encounter struct {
-	ID int
-	Name      string
-	Live      bool
-	IsBoss    bool
-	StartTime time.Time
-	EndTime   time.Time
-	Kill 	  bool
+	ID         int
+	Name       string
+	Live       bool
+	IsBoss     bool
+	StartTime  time.Time
+	EndTime    time.Time
+	Kill       bool
 	Difficulty int
 	Players    int
-	UnitMap   UnitMap
+	UnitMap    UnitMap
 	//PlayerMap   PlayerMap
 }
 
@@ -107,7 +108,7 @@ type logFile struct {
 	//petOwners        petMap
 	classIdent map[int]int
 	parseSpeed float64
-	logTime time.Time
+	logTime    time.Time
 }
 
 func NewLogFile(file *tail.Tail, speed float64) *logFile {
@@ -116,7 +117,7 @@ func NewLogFile(file *tail.Tail, speed float64) *logFile {
 	lf.parseSpeed = speed
 	lf.encounters = make(encounterMap)
 	lf.eventCount = make(eventMap)
-	
+
 	//lf.petOwners = make(petMap)
 
 	return lf
@@ -127,20 +128,20 @@ func (lf *logFile) ParseLogFile() {
 	lf.newEncounter("trash")
 	n := 0
 	//get time on first entry
-	firstLine :=  <-lf.file.Lines
-	
+	firstLine := <-lf.file.Lines
+
 	lf.ParseLine(firstLine.Text)
 	n++
-	
+
 	nowLog := lf.logTime
 	now := time.Now()
-	
+
 	for line := range lf.file.Lines {
 		if line.Err != nil {
 			log.Print(line.Err)
 			continue
-			}
-		
+		}
+
 		lf.ParseLine(line.Text)
 
 		if n%1000 == 0 && n != 0 {
@@ -153,9 +154,9 @@ func (lf *logFile) ParseLogFile() {
 				log.Printf("Parsed %v entries in %v seconds (%v/sec)", n, int(duration/time.Second), speed)
 			}
 			//are we going too fast?
-			if(lf.parseSpeed != 0 && float64(durationLog / duration) > lf.parseSpeed) {
-				log.Printf("Log seconds: %v real seconds:  %v, aim: %v current: %v",durationLog.Seconds(),duration.Seconds(),lf.parseSpeed, float64(durationLog / duration))
-				time.Sleep((durationLog / time.Duration(lf.parseSpeed)) - duration)//TODO calculate accurate sleep time: DONE
+			if lf.parseSpeed != 0 && float64(durationLog/duration) > lf.parseSpeed {
+				log.Printf("Log seconds: %v real seconds:  %v, aim: %v current: %v", durationLog.Seconds(), duration.Seconds(), lf.parseSpeed, float64(durationLog/duration))
+				time.Sleep((durationLog / time.Duration(lf.parseSpeed)) - duration) //TODO calculate accurate sleep time: DONE
 			}
 		}
 		n++
@@ -181,7 +182,7 @@ func quickerAlmostCSVParse(line string) []string {
 
 	fieldStart := 0
 	fieldIndex := 0
-	L:
+L:
 	for i, r := range bytes {
 		switch r {
 		case slash:
@@ -206,11 +207,11 @@ func quickerAlmostCSVParse(line string) []string {
 			}
 
 		case comma:
-			if !insideQuotes && hadQuotes == true && hadSlash == true{
-				fields[fieldIndex] = strings.Replace(string(bytes[fieldStart : i-1]),`\"`,`"`,-1)
-			} else if !insideQuotes && hadQuotes == true{
-				fields[fieldIndex] = string(bytes[fieldStart:i-1])
-			} else if insideQuotes {  //ignore
+			if !insideQuotes && hadQuotes == true && hadSlash == true {
+				fields[fieldIndex] = strings.Replace(string(bytes[fieldStart:i-1]), `\"`, `"`, -1)
+			} else if !insideQuotes && hadQuotes == true {
+				fields[fieldIndex] = string(bytes[fieldStart : i-1])
+			} else if insideQuotes { //ignore
 				//log.Print(string(bytes))
 				continue
 			} else {
@@ -220,10 +221,10 @@ func quickerAlmostCSVParse(line string) []string {
 			fieldStart = i + 1
 			hadQuotes = false
 		case nl, rl:
-			if hadQuotes == true && hadSlash == true{
-				fields[fieldIndex] = strings.Replace(string(bytes[fieldStart : i-1]),`\"`,`"`,-1)
-			} else if hadQuotes == true{
-				fields[fieldIndex] = string(bytes[fieldStart:i-1])
+			if hadQuotes == true && hadSlash == true {
+				fields[fieldIndex] = strings.Replace(string(bytes[fieldStart:i-1]), `\"`, `"`, -1)
+			} else if hadQuotes == true {
+				fields[fieldIndex] = string(bytes[fieldStart : i-1])
 			} else {
 				fields[fieldIndex] = string(bytes[fieldStart:i])
 			}
@@ -235,23 +236,21 @@ func quickerAlmostCSVParse(line string) []string {
 	return fields
 }
 
-
-
-func (lf *logFile) ParseLine(line string)  {
+func (lf *logFile) ParseLine(line string) {
 	event := new(wowEvent)
 	//use the CSV parser because Storm, Earth, and Fire. This will probably slow it down. TODO:  Write state machine here
 	//parts := strings.Split(line, ",")
 	/*
-	csvline := strings.Replace(line, `\"`, `""`, -1)
-	parts, err := csv.NewReader(strings.NewReader(csvline)).Read()
-	if err != nil {
-		log.Print(line)
-		log.Fatal(err)
-	}
+		csvline := strings.Replace(line, `\"`, `""`, -1)
+		parts, err := csv.NewReader(strings.NewReader(csvline)).Read()
+		if err != nil {
+			log.Print(line)
+			log.Fatal(err)
+		}
 	*/
-	
+
 	parts := quickerAlmostCSVParse(line)
-	
+
 	timeandevent := strings.Split(parts[0], "  ")
 
 	event.eventType = timeandevent[1]
@@ -261,7 +260,7 @@ func (lf *logFile) ParseLine(line string)  {
 	if err != nil {
 		log.Printf("Unable to parse time %v reason %v", timeandevent[0], err)
 	}
-	
+
 	lf.logTime = etime
 	event.eventTime = etime
 	//spew.Dump(err)
@@ -289,7 +288,7 @@ func (lf *logFile) ParseLine(line string)  {
 		lf.parseSpellAuraAppliedDose(event)
 	case "SPELL_AURA_REMOVED":
 		lf.parseSpellAuraRemoved(event)
-		case "SPELL_AURA_REMOVED_DOSE":
+	case "SPELL_AURA_REMOVED_DOSE":
 		lf.parseSpellAuraRemovedDose(event)
 	case "ENCOUNTER_START":
 		lf.parseEncounterStart(event)
@@ -413,17 +412,17 @@ func (lf *logFile) parseSpellDamage(event *wowEvent) {
 	//if(len(event.fields) < 33) {
 	//	log.Print(event.fields)
 	//}
-	
+
 	source, target := lf.currentEncounter.getSourceDestUnit(event)
 	s := source.getSpell(event.fields[9:12])
-	
+
 	damage, _ := strconv.Atoi(event.fields[24])
-	
+
 	crit := event.fields[30] == "1"
 	multi := event.fields[33] == "1"
 
 	s.damageEvents = append(s.damageEvents, spellEvent{event.eventTime, target, damage, 0, false, crit, multi})
-	
+
 }
 
 /*
@@ -434,9 +433,9 @@ func (lf *logFile) parseSpellPeriodicDamage(event *wowEvent) {
 
 	source, target := lf.currentEncounter.getSourceDestUnit(event)
 	s := source.getSpell(event.fields[9:12])
-	
+
 	damage, _ := strconv.Atoi(event.fields[24])
-	
+
 	crit := event.fields[30] == "1"
 	multi := event.fields[33] == "1"
 
@@ -476,17 +475,17 @@ nil
 
 */
 func (lf *logFile) parseSpellHeal(event *wowEvent) {
-	
+
 	source, target := lf.currentEncounter.getSourceDestUnit(event)
 	s := source.getSpell(event.fields[9:12])
-	
+
 	damage, _ := strconv.Atoi(event.fields[24])
-	
+
 	crit := event.fields[27] == "1"
 	multi := event.fields[28] == "1"
 
-	//log.Printf("crit: %v, multi: %v, fields: %v", crit, multi, event.fields[26:]) 
-	
+	//log.Printf("crit: %v, multi: %v, fields: %v", crit, multi, event.fields[26:])
+
 	s.healingEvents = append(s.healingEvents, spellEvent{event.eventTime, target, damage, 0, false, crit, multi})
 	/*
 			type spellDamage struct {
@@ -498,7 +497,7 @@ func (lf *logFile) parseSpellHeal(event *wowEvent) {
 			ncrit int
 			nmulit int
 		}
-*/
+	*/
 
 }
 
@@ -511,9 +510,9 @@ func (lf *logFile) parseSpellPeriodicHeal(event *wowEvent) {
 
 	source, target := lf.currentEncounter.getSourceDestUnit(event)
 	s := source.getSpell(event.fields[9:12])
-	
+
 	damage, _ := strconv.Atoi(event.fields[24])
-	
+
 	crit := event.fields[27] == "1"
 	multi := event.fields[28] == "1"
 
@@ -534,7 +533,7 @@ Player-639-0370246C, Target
 "Rending Slash", Spellname
 0x1,  School?
 Player-3391-068B0ACD, Absorb provider??
-"Sugarcandy-Silvermoon",  Name? 
+"Sugarcandy-Silvermoon",  Name?
 0x514, flags?
 0x0, flags?
 17,  Absorb Spell AURA ID, MAY NOT BE SPELL ID
@@ -563,28 +562,27 @@ Player-1313-04554800,
 OH LORD THERES A MELEE HIT VERSION WITHOUT THE 3 SPELL FIELDS
 */
 
-
 func (lf *logFile) parseSpellAbsorbed(event *wowEvent) {
-	
+
 	source, target := lf.currentEncounter.getSourceDestUnit(event)
-	
-	if event.fields[17] != "" { //spell 
-		
+
+	if event.fields[17] != "" { //spell
+
 		s := source.getSpell(event.fields[9:12])
 		amount, _ := strconv.Atoi(event.fields[19])
 		//credit damage
 		s.damageEvents = append(s.damageEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
 		//now healing
-		caster := lf.currentEncounter.getUnitFromFields(event.fields[12:14])
+		caster := lf.currentEncounter.getUnitFromFields(event.fields[12:15])
 		cs := caster.getSpell(event.fields[16:19])
 		cs.healingEvents = append(cs.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
 		//we need an aura event too
-		
-		aura := target.getAura(event.fields[16:], caster)//should always have been seen.
+
+		aura := target.getAura(event.fields[16:], caster) //should always have been seen.
 		//ALMIGHTY HACK TO PREVENT PARSER CRASHING DUE TO Aura applied before current encounter
 		if len(aura.events) != 0 {
 			lastEvent := aura.events[len(aura.events)-1:][0]
-		
+
 			auraEvent := auraEvent{event.eventTime, 1, lastEvent.amount - amount}
 
 			aura.events = append(aura.events, auraEvent)
@@ -592,29 +590,30 @@ func (lf *logFile) parseSpellAbsorbed(event *wowEvent) {
 			auraEvent := auraEvent{event.eventTime, 1, amount}
 			aura.events = append(aura.events, auraEvent)
 		}
-	} else {  //melee
-		s := source.getSpell([]string{"0","Melee","1"})
+	} else { //melee
+		s := source.getSpell([]string{"0", "Melee", "1"})
 		amount, _ := strconv.Atoi(event.fields[16])
 		//credit damage
 		s.damageEvents = append(s.damageEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
 		//now healing
-		caster := lf.currentEncounter.getUnitFromFields(event.fields[9:11])
+		caster := lf.currentEncounter.getUnitFromFields(event.fields[9:12])
 		cs := caster.getSpell(event.fields[13:16])
 		cs.healingEvents = append(cs.healingEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
 		//we need an aura event too
-		
+
 		aura := target.getAura(event.fields[13:], caster)
 		if len(aura.events) != 0 {
 			lastEvent := aura.events[len(aura.events)-1:][0]
-		
+
 			auraEvent := auraEvent{event.eventTime, 1, lastEvent.amount - amount}
 
 			aura.events = append(aura.events, auraEvent)
 		}
-		
+
 	}
 
 }
+
 /*
 12/29 15:55:56.520  SWING_DAMAGE_LANDED,
 Creature-0-3769-1228-16363-80551-0000A17966,
@@ -654,11 +653,10 @@ func (lf *logFile) parseSwingDamageLanded(event *wowEvent) {
 	//SAME THING AS SPELL DAMAGE BUT ALL THE FIELDS ARE DIFFERENT.
 
 	source, target := lf.currentEncounter.getSourceDestUnit(event)
-	
-	s := source.getSpell([]string{"0","Melee","1"})
+
+	s := source.getSpell([]string{"0", "Melee", "1"})
 	damage, _ := strconv.Atoi(event.fields[21])
 
-	
 	crit := event.fields[27] == "1"
 	multi := event.fields[30] == "1"
 
@@ -666,28 +664,28 @@ func (lf *logFile) parseSwingDamageLanded(event *wowEvent) {
 
 	//log.Print(unit.name)
 	/*
-	spellDamage, seen := unit.spells[spellID]
+		spellDamage, seen := unit.spells[spellID]
 
-	if !seen {
-		spellDamage.SpellName = "Melee"
-		spellDamage.School = 1
-	}
+		if !seen {
+			spellDamage.SpellName = "Melee"
+			spellDamage.School = 1
+		}
 
-	spellDamage.Hdamage += damage
+		spellDamage.Hdamage += damage
 
-	if event.fields[30] == "1" {
-		spellDamage.Nmulti++
+		if event.fields[30] == "1" {
+			spellDamage.Nmulti++
 
-	} else {
-		spellDamage.Nhits++
-	}
+		} else {
+			spellDamage.Nhits++
+		}
 
-	if event.fields[27] == "1" {
-		spellDamage.Ncrit++
-	}
+		if event.fields[27] == "1" {
+			spellDamage.Ncrit++
+		}
 
-	unit.spells[spellID] = spellDamage
- */
+		unit.spells[spellID] = spellDamage
+	*/
 }
 
 /*
@@ -738,12 +736,11 @@ func (lf *logFile) parseSpellAuraApplied(event *wowEvent) {
 	auraEvent := auraEvent{event.eventTime, 1, amount}
 
 	aura.events = append(aura.events, auraEvent)
-	
+
 	//if event.fields[13] != "" {
 	//	log.Printf("%v Applied %v",aura.name, event.fields[13])
 	//}
 
-	
 }
 
 /*
@@ -773,7 +770,7 @@ func (lf *logFile) parseSpellAuraAppliedDose(event *wowEvent) {
 	auraEvent := auraEvent{event.eventTime, dose, 0}
 
 	aura.events = append(aura.events, auraEvent)
-	
+
 }
 
 /*
@@ -804,7 +801,7 @@ func (lf *logFile) parseSpellAuraRemoved(event *wowEvent) {
 	auraEvent := auraEvent{event.eventTime, 0, 0}
 
 	aura.events = append(aura.events, auraEvent)
-	
+
 	//if event.fields[13] != "" {
 	//	log.Printf("%v Removed %v",aura.name, event.fields[13])
 	//}
@@ -821,33 +818,31 @@ func (lf *logFile) parseSpellAuraRemovedDose(event *wowEvent) {
 	dose, _ := strconv.Atoi(event.fields[13])
 
 	//key := auraKey{auraID, source}
-	
-	aura := dest.getAura(event.fields[9:],source)
-	
+
+	aura := dest.getAura(event.fields[9:], source)
+
 	auraEvent := auraEvent{event.eventTime, dose, 0}
 
 	aura.events = append(aura.events, auraEvent)
-	
-}
 
+}
 
 //12/29 16:04:08.015  ENCOUNTER_START,1719,"Twin Ogron",17,25
 func (lf *logFile) parseEncounterStart(event *wowEvent) {
 
 	//log.Print(event.fields)
-	
-	
+
 	lf.currentEncounter.EndTime = event.eventTime
 	lf.newEncounter(event.fields[2])
 	lf.currentEncounter.StartTime = event.eventTime
 	lf.currentEncounter.IsBoss = true
-	
-	diff, _ := strconv.ParseInt(event.fields[3],0,0)
+
+	diff, _ := strconv.ParseInt(event.fields[3], 0, 0)
 	lf.currentEncounter.Difficulty = int(diff)
-	
-	players, _ := strconv.ParseInt(event.fields[4],0,0)
+
+	players, _ := strconv.ParseInt(event.fields[4], 0, 0)
 	lf.currentEncounter.Players = int(players)
-	
+
 	//lf.eventCount = make(eventMap)
 }
 
@@ -857,22 +852,20 @@ func (lf *logFile) parseEncounterEnd(event *wowEvent) {
 	log.Printf("Finished encounter: %v", lf.currentEncounter.Name)
 	lf.currentEncounter.Live = false
 	lf.currentEncounter.EndTime = event.eventTime
-	
-	kill, _ := strconv.ParseInt(event.fields[5],0,0)
+
+	kill, _ := strconv.ParseInt(event.fields[5], 0, 0)
 	if int(kill) == 1 {
 		lf.currentEncounter.Kill = true
-		}
+	}
 	//log.Print(lf.currentEncounter)
-	
+
 	lf.newEncounter("trash")
 	lf.currentEncounter.StartTime = event.eventTime
-	
-	
+
 }
 
 func (lf *logFile) newEncounter(boss string) {
-    
-	
+
 	newE := &encounter{}
 	newE.Name = boss
 	newE.ID = 0
@@ -880,43 +873,41 @@ func (lf *logFile) newEncounter(boss string) {
 	if lf.currentEncounter != nil {
 		newE.ID = lf.currentEncounter.ID + 1
 	}
-	
+
 	newE.UnitMap = make(UnitMap)
-	
+
 	lf.encounters[newE.ID] = newE
 	lf.currentEncounter = newE
 	log.Printf("New encounter: %v", newE.Name)
 }
 
 func (u *wunit) getSpell(fields []string) *spell {
-	
-	
+
 	spellID, _ := strconv.Atoi(fields[0])
 	s, ok := u.spells[spellID]
-		
+
 	if !ok {
 		s = &spell{}
-		school, _ := strconv.ParseInt(fields[2],0,0)
+		school, _ := strconv.ParseInt(fields[2], 0, 0)
 		s.id = spellID
-		s.name  = fields[1]
+		s.name = fields[1]
 		s.school = school
 		s.damageEvents = make([]spellEvent, 0, 5)
 		s.healingEvents = make([]spellEvent, 0, 5)
 		u.spells[spellID] = s
-		
+
 		//log.Print(fields[1])
 	}
 	return s
 }
 
-func (u *wunit) getAura (fields []string, source *wunit) *unitAura {
+func (u *wunit) getAura(fields []string, source *wunit) *unitAura {
 	auraID, _ := strconv.Atoi(fields[0])
 
 	key := auraKey{auraID, source}
-	
+
 	aura, seen := u.auras[key]
-	
-	
+
 	if !seen {
 		aura = &unitAura{}
 		aura.name = fields[1]
@@ -925,12 +916,12 @@ func (u *wunit) getAura (fields []string, source *wunit) *unitAura {
 		aura.events = make([]auraEvent, 0, 10)
 		u.auras[key] = aura
 	}
-return aura
+	return aura
 }
 
 func (e *encounter) getSourceDestUnit(event *wowEvent) (*wunit, *wunit) {
-    
-	return e.getUnitFromFields(event.fields[1:3]),e.getUnitFromFields(event.fields[5:7])
+
+	return e.getUnitFromFields(event.fields[1:4]), e.getUnitFromFields(event.fields[5:8])
 }
 
 func (e *encounter) getUnitFromFields(fields []string) *wunit {
@@ -941,7 +932,7 @@ func (e *encounter) getUnitFromFields(fields []string) *wunit {
 	unit, exists := e.UnitMap[GUID]
 
 	if !exists {
-		unit = &wunit{GUID, Name, false, 0, 0, nil, nil, nil, nil, nil}
+		unit = &wunit{GUID, Name, false, false, 0, 0, nil, nil, nil, nil, nil}
 		unit.spells = make(unitSpells)
 		unit.pets = make([]*wunit, 0, 5)
 		unit.auras = make(unitAuras)
@@ -949,7 +940,14 @@ func (e *encounter) getUnitFromFields(fields []string) *wunit {
 		if strings.HasPrefix(GUID, "Player") {
 			unit.isPlayer = true
 		}
-	e.UnitMap[GUID] = unit
+
+		flags,_ := strconv.ParseInt(fields[2], 0, 0)
+
+		if (flags & 0x40) > 0 {
+			unit.hostile = true
+		}
+		e.UnitMap[GUID] = unit
 	}
+
 	return unit
 }
