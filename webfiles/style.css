@@ -5,7 +5,7 @@ body {
 
 
 .bg-c {
- background:#ff0000;
+ background:#9933cc;
 }
 
 .bg-deathknight {
@@ -177,10 +177,10 @@ text-align: right;
 width:20%
 }
 #damageTargetTable table col:nth-child(2) {
-width:70%;
+width:75%;
 }
 #damageTargetTable table col:nth-child(3) {
-width:10%
+width:5%
 }
 
 #damageTargetTable .classBar {

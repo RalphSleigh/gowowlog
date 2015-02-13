@@ -152,54 +152,7 @@ func RESTAuraDetails(c *appContext, w http.ResponseWriter, r *http.Request) (int
 	return http.StatusOK, nil
 }
 
-type RESTSpellResponse struct {
-	SpellID   int
-	SpellName string
-	School    int64
-	Damage    int
-	Absorb    int
-	Casts     int
-	Hits      int
-	Ticks     int
-	Crits     int
-	Multis    int
-}
 
-func (sp *RESTSpellResponse) add(e spellEvent) {
-
-	/*
-		type spellEvent struct {
-		time time.Time
-		target *wunit
-		amount int
-		absorb int
-		tick bool
-		crit bool
-		multi bool
-		}
-	*/
-
-	sp.Damage += e.amount
-	sp.Absorb += e.absorb
-
-	if e.multi {
-		sp.Multis++
-	}
-
-	if e.crit {
-		sp.Crits++
-	}
-
-	if e.tick && !e.multi {
-		sp.Ticks++
-	}
-
-	if !e.tick && !e.multi {
-		sp.Hits++
-	}
-
-	//return sp
-}
 
 type RESTTargetResponse struct {
 	Total int
@@ -468,6 +421,54 @@ func RESTDamageSources(c *appContext, w http.ResponseWriter, r *http.Request) (i
 		playerDamage := unit.getUnitDamageTotal(targetUnits, true)
 		response = append(response, RESTDamageSourceUnit{unit.name, playerDamage, unit.guid, unit.Class, unit.Spec})
 	}
+
+	js, _ := json.Marshal(response)
+	w.Write(js)
+	return http.StatusOK, nil
+}
+
+func RESTDamageTargets(c *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
+	vars := mux.Vars(r)
+	eID, _ := strconv.Atoi(vars["eID"])
+	sID := vars["sID"]
+	tID := vars["tID"]
+
+	e, ok := c.lf.encounters[eID]
+
+	if !ok {
+		log.Printf("Cant find encounter #%v",eID);
+		return http.StatusNotFound, errors.New("Encounter not found")	
+	}
+
+	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
+
+	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
+
+	response := e.getDamageToTargets(sourceUnits,targetUnits)
+
+	js, _ := json.Marshal(response)
+	w.Write(js)
+	return http.StatusOK, nil
+}
+
+func RESTDamageAbilities(c *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
+	vars := mux.Vars(r)
+	eID, _ := strconv.Atoi(vars["eID"])
+	sID := vars["sID"]
+	tID := vars["tID"]
+
+	e, ok := c.lf.encounters[eID]
+
+	if !ok {
+		log.Printf("Cant find encounter #%v",eID);
+		return http.StatusNotFound, errors.New("Encounter not found")	
+	}
+
+	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
+
+	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
+
+	response := e.getDamageByAbility(sourceUnits,targetUnits)
 
 	js, _ := json.Marshal(response)
 	w.Write(js)

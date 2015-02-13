@@ -16,7 +16,6 @@ If you don't get the interface, try specifying -webroot to the included webfiles
 
 Known issues:
 
-* Shuffle/other friendly fire shows up as damage, probably should not.
 * Some pets are unaccounted for and need owners.
 * Spec detection for a few specs is not working. No attempt at the moment to diff Glad/Prot Warriors
 * Many many ignored errors, leading to panics. concurrent map access is undefined, should fix that.
@@ -24,7 +23,7 @@ Known issues:
 
 Todos:
 
-* More detailed Damage/Healing breakdown, to/from source, etc.
+* Healing
 * Better Aura graphs.
 * Interrupts/Problems 
 

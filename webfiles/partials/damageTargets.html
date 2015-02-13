@@ -1,20 +1,18 @@
 <div id="damageTargetTable">
-	<table class="table table-condensed table-striped">
-			<colgroup><col><col><col></colgroup>
-			<thead>
-				<tr>
-					<th>Target</th>
-					<th>Damage</th>
-					<th>%</th>
+<table class="table table-condensed table-striped table-hover">
+	<colgroup><col><col><col></colgroup>
+		<thead>
+			<tr><th>Name</th><th>Damage</th><th>%</th></tr>
+		</thead>
+		<tbody>
+				<tr ng-repeat="target in units | orderBy:orderFunction">
+					<td>{{target.Name}}</td>
+					<td>
+					<div ng-repeat="unit in target.Damage | orderBy: unit : true" style="width:{{barPercent(unit)}}%" class="classBar bg-{{cssClass(0)}}"></div>
+					{{target.Total  | prettyNum}}</td>
+					<td>{{target.Total * 100/total() | prettyNum}}</td>
 				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="target in damageTargetArray | orderBy:'Total':true">
-					<td>{{target.name}}</td>
-					<td><div ng-repeat="unit in target.unitsArray | orderBy:'Damage': true" style="width:{{unit.Damage * 70/unitHighestNameDamage()}}%" class="classBar bg-{{cssClass(target.Class)}}"></div>{{target.Total | prettyNum}}</td>
-					<td>{{(target.Total) * 100/unitDamage() | prettyNum }}%</td>
-				</tr>
-			</tbody>
-	</table>
+		</tbody>
+</table>
 </div>
 

@@ -6,7 +6,8 @@ damageApp.controller('HomeCtrl', ['$scope', '$state','$stateParams', '$interval'
    DmgAppState.setStateFromURL();//
    $scope.state =  DmgAppState.getState();
    
-   $scope.automatic = true;
+   $scope.automatic = false;
+   if($scope.state.encounter == 0)$scope.automatic = true
    //$scope.encounters = Dmg.Encounters.query()
    var refreshData = function() {
     // Assign to scope within callback to avoid data flickering on screen
@@ -199,81 +200,86 @@ damageApp.controller('DamageSources', ['$scope', 'Dmg', 'DmgAppState', 'DamageDa
   $scope.cssClass = function(unitClass) {
 	return WOW.cs[unitClass].CSSClass;
 	};
-  /*
-  $scope.unitDamage = function() {
-		var damage = 0;
-		angular.forEach($scope.unit[$scope.state.damage.d],function(value,index){
-			damage += (value.Damage+value.Absorb);
-		});
-		return damage;
-	}
 
-  $scope.maxSpellDamage = function() {
-		var damage = 0;
-		angular.forEach($scope.unit[$scope.state.damage.d],function(value,index){
-			damage = Math.max(value.Damage+value.Absorb,damage);
-		});
-		return damage;
-	}
-	*/
 	$scope.orderFunction = function(e) {
 		return -(e.Damage);
 	};
 
 }]);
 
-damageApp.controller('DamageTargets', ['$scope', '$stateParams' ,'Dmg', 'DmgAppState', function ($scope, $stateParams, Dmg, DmgAppState) {
+damageApp.controller('DamageTargets', ['$scope', 'Dmg', 'DmgAppState', 'DamageData', function ($scope, Dmg, DmgAppState, DamageData) {
 	
-  $scope.damageTargetArray = [];
-  //$scope.damageTargetUnits = {};
+   $scope.state =  DmgAppState.getState(); 
    //var  res = r('/encounters');
-  $scope.unit = Dmg.Spells.get({e:$stateParams.e,p:$stateParams.p});
-  
-  $scope.$watch("unit",function(newValue, oldValue) {//lets reshape the unit data into arrays cause ng-repeat sucks at objects
-		$scope.damageTargetArray = [];
-		var loop = newValue.DamageTargets;
-		if($scope.state.damage.d == "Healing")loop = newValue.HealingTargets;
-		
-		angular.forEach(loop,function(value,key){		
-			value.name = key;
-			value.unitsArray = [];
-			//$scope.damageTargetUnits[value.name] = [];
-			angular.forEach(value.Units,function(unit,key){
-				value.unitsArray.push({Damage:unit,ID:key});
-				
-			});
-		$scope.damageTargetArray.push(value);
-		});
-	}, true);
-  
-  $scope.unitDamage = function() {
-		var damage = 0;
-		angular.forEach($scope.unit[$scope.state.damage.d],function(value,index){
-			damage += (value.Damage+value.Absorb);
-		});
-		return damage;
-	}
+  //$scope.unit = Dmg.Spells.get({e:$stateParams.e,p:$stateParams.p});
+  //if($scope.state.damage.d == "damage")$scope.unit.Spells = $scope.unit.Damage;
+  //if($scope.state.damage.d == "healing")$scope.unit.Spells = $scope.unit.Healing;
 
-  $scope.unitHighestNameDamage = function() {
-		var damage = 0;
-		var loop = $scope.unit.DamageTargets;
-		if($scope.state.damage.d == "Healing")loop = $scope.unit.HealingTargets;
-		angular.forEach(loop,function(value,index){
-			damage = Math.max(value.Total,damage);
+  $scope.units = DamageData
+  
+   $scope.barPercent = function(damage) {
+		if(!damage)return 0;
+		var maxDamage = 0;
+		angular.forEach($scope.units,  function(value,index){
+			maxDamage = Math.max(maxDamage, value.Total);
 		});
-		return damage;
-	}
-	
-	$scope.orderTargetsFunction = function(e) {
-		return -e;
+		return damage * 70/maxDamage
 	};
 	
-	$scope.cssClass = function(unitClass) {
+  $scope.cssClass = function(unitClass) {
 	return WOW.cs[unitClass].CSSClass;
 	};
+
+	$scope.orderFunction = function(e) {
+		return -e.Total
+	};
+
+	$scope.total = function() {
+		var Total = 0;
+		angular.forEach($scope.units,  function(value,index){
+			Total += value.Total
+		});
+		return Total;
+
+	}
 	
 }]);
 
+damageApp.controller('DamageAbilities', ['$scope', 'Dmg', 'DmgAppState', 'DamageData', function ($scope, Dmg, DmgAppState, DamageData) {
+  $scope.state =  DmgAppState.getState(); 
+   //var  res = r('/encounters');
+  //$scope.unit = Dmg.Spells.get({e:$stateParams.e,p:$stateParams.p});
+  //if($scope.state.damage.d == "damage")$scope.unit.Spells = $scope.unit.Damage;
+  //if($scope.state.damage.d == "healing")$scope.unit.Spells = $scope.unit.Healing;
+
+  $scope.spells = DamageData
+  /*
+   $scope.barPercent = function(damage) {
+		if(!damage)return 0;
+		var maxDamage = 0;
+		angular.forEach($scope.units,  function(value,index){
+			maxDamage = Math.max(maxDamage, value.Damage);
+		});
+		return damage * 70/maxDamage
+	};
+	*/
+  $scope.cssClass = function(unitClass) {
+	return WOW.cs[unitClass].CSSClass;
+	};
+
+	$scope.orderFunction = function(e) {
+		return -(e.Damage);
+	};
+
+	$scope.maxSpellDamage = function() {
+		var maxDamage = 0;
+		angular.forEach($scope.spells,  function(value,index){
+			maxDamage = Math.max(maxDamage, (value.Damage+value.Absorb));
+		});
+		return maxDamage
+	};
+
+}]);
 
 damageApp.controller('AuraPlayerDetails', ['$scope', '$stateParams' ,'Dmg', 'DmgAppState', function ($scope, $stateParams, Dmg, DmgAppState) {
 	

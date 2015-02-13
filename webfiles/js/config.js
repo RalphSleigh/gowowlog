@@ -62,16 +62,25 @@ damageApp.config(function($stateProvider, $urlRouterProvider) {
     .state('home.encounter.damage.done.target', {
       url: "/target",
 	  views: {
-		"spells@home.encounter.damage":{ templateUrl: "/partials/spells.html", controller:'PlayerDetails' },
-		}       
+		"table@home.encounter.damage":{ templateUrl: "/partials/damageTargets.html",
+		controller:'DamageTargets' }},
+	    resolve:{
+	 		DamageData: function($stateParams, Dmg){
+	 				return Dmg.DamageTargets.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t}).$promise;
+	 			},
+	 		}	     
     })
 
     .state('home.encounter.damage.done.ability', {
       url: "/ability",
 	  views: {
-		"spells@home.encounter.damage":{ templateUrl: "/partials/spells.html",
-		controller:'PlayerDetails' }
-	  },
+		"table@home.encounter.damage":{ templateUrl: "/partials/damageAbilities.html",
+		controller:'DamageAbilities' }},
+	    resolve:{
+	 		DamageData: function($stateParams, Dmg){
+	 				return Dmg.DamageAbilities.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t}).$promise;
+	 			},
+	 		}	     
     })
 
 	       

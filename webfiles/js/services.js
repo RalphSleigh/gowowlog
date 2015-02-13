@@ -18,6 +18,12 @@ dmgService.factory('Dmg', ['$resource',
 	  factory.DamageSources = $resource('/api/e/:e/damage/sources/:s/:t', {},{list : {
       method : 'GET',
     }});
+	  factory.DamageTargets = $resource('/api/e/:e/damage/targets/:s/:t', {},{list : {
+      method : 'GET',
+    }});
+	  factory.DamageAbilities = $resource('/api/e/:e/damage/abilities/:s/:t', {},{list : {
+      method : 'GET',
+    }});
 
     return factory;
   }]);
@@ -48,7 +54,10 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 					state.damage.a = $stateParams.a;
 				}
 				
-				
+				if($state.includes('home.encounter.damage.done.source'))state.damage.l = "source"
+				if($state.includes('home.encounter.damage.done.target'))state.damage.l = "target"
+				if($state.includes('home.encounter.damage.done.ability'))state.damage.l = "ability"
+
 				//if($stateParams.h)state.damage.d = $stateParams.h;
 				
 				
@@ -74,7 +83,7 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 		exports.setPane = function(p) {
 			state.pane = p;
 			if(p == "damage") {
-				$state.go("home.encounter.damage.spells",$state.params);
+				$state.go("home.encounter.damage.done.source",$state.params);
 				
 			} else if (p == "auras") {
 				$state.go("home.encounter.auras.display",$state.params); 
