@@ -7,12 +7,12 @@ import (
 	//"encoding/csv"
 	"encoding/json"
 	"errors"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 	"strings"
-	"github.com/gorilla/mux"
+	"time"
 )
 
 /*
@@ -87,9 +87,9 @@ func RESTAuraDetails(c *appContext, w http.ResponseWriter, r *http.Request) (int
 			e = v
 		}
 	}
-	
+
 	if e.ID == 0 {
-		log.Printf("Cant find encounter #%v",eID);
+		log.Printf("Cant find encounter #%v", eID)
 		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
@@ -152,8 +152,6 @@ func RESTAuraDetails(c *appContext, w http.ResponseWriter, r *http.Request) (int
 	return http.StatusOK, nil
 }
 
-
-
 type RESTTargetResponse struct {
 	Total int
 	Units map[string]int
@@ -161,9 +159,9 @@ type RESTTargetResponse struct {
 }
 
 type RESTSpellsDetailsResponse struct {
-	Damage  []RESTSpellResponse
-	Healing []RESTSpellResponse
-	DamageTargets map[string]RESTTargetResponse
+	Damage         []RESTSpellResponse
+	Healing        []RESTSpellResponse
+	DamageTargets  map[string]RESTTargetResponse
 	HealingTargets map[string]RESTTargetResponse
 	//Casts  []unitCast
 	Unit string
@@ -181,9 +179,9 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 			e = v
 		}
 	}
-	
+
 	if e.ID == 0 {
-		log.Printf("Cant find encounter #%v",eID);
+		log.Printf("Cant find encounter #%v", eID)
 		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
@@ -215,8 +213,8 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 			name, ok := combinedMapDamageTargets[e.target.name]
 			if !ok {
 				name.Units = make(map[string]int)
-				}
-			name.Total += e.amount;
+			}
+			name.Total += e.amount
 			name.Units[e.target.guid] += e.amount
 			combinedMapDamageTargets[e.target.name] = name
 		}
@@ -234,12 +232,12 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 			if !ok {
 				name.Units = make(map[string]int)
 				if e.target.owner != nil {
-					name.Class = e.target.owner.Class;
+					name.Class = e.target.owner.Class
 				} else {
-					name.Class = e.target.Class;
-				 }
+					name.Class = e.target.Class
+				}
 			}
-			name.Total += e.amount;
+			name.Total += e.amount
 			name.Units[e.target.guid] += e.amount
 			combinedMapHealingTargets[e.target.name] = name
 		}
@@ -259,9 +257,9 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 				name, ok := combinedMapDamageTargets[e.target.name]
 				if !ok {
 					name.Units = make(map[string]int)
-					
+
 				}
-				name.Total += e.amount;
+				name.Total += e.amount
 				name.Units[e.target.guid] += e.amount
 				combinedMapDamageTargets[e.target.name] = name
 			}
@@ -279,17 +277,17 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 			for _, e := range s.healingEvents {
 				sR.add(e)
 				name, ok := combinedMapHealingTargets[e.target.name]
-			if !ok {
-				name.Units = make(map[string]int)
-				if e.target.owner != nil {
-					name.Class = e.target.owner.Class;
-				} else {
-					name.Class = e.target.Class;
-				 }
+				if !ok {
+					name.Units = make(map[string]int)
+					if e.target.owner != nil {
+						name.Class = e.target.owner.Class
+					} else {
+						name.Class = e.target.Class
+					}
 				}
-			name.Total += e.amount;
-			name.Units[e.target.guid] += e.amount
-			combinedMapHealingTargets[e.target.name] = name
+				name.Total += e.amount
+				name.Units[e.target.guid] += e.amount
+				combinedMapHealingTargets[e.target.name] = name
 			}
 		}
 	}
@@ -305,9 +303,8 @@ func RESTSpellsDetails(c *appContext, w http.ResponseWriter, r *http.Request) (i
 		respH = append(respH, *v)
 	}
 
-	
-	w.Header().Add("Cache-Control","public,max-age=300")
-	js, _ := json.Marshal(RESTSpellsDetailsResponse{resp, respH, combinedMapDamageTargets,combinedMapHealingTargets, vars["pID"]})
+	w.Header().Add("Cache-Control", "public,max-age=300")
+	js, _ := json.Marshal(RESTSpellsDetailsResponse{resp, respH, combinedMapDamageTargets, combinedMapHealingTargets, vars["pID"]})
 	w.Write(js)
 	return http.StatusOK, nil
 
@@ -323,7 +320,7 @@ type restEncounterList struct {
 }
 
 type restUnitInfo struct {
-	ID string
+	ID   string
 	Name string
 }
 
@@ -349,20 +346,19 @@ func RESTEncounterDetails(c *appContext, w http.ResponseWriter, r *http.Request)
 			v = e
 		}
 	}
-	
+
 	if v.ID == 0 {
-		log.Printf("Cant find encounter #%v",eID);
+		log.Printf("Cant find encounter #%v", eID)
 		return http.StatusNotFound, errors.New("Encounter not found")
 	}
-	
 
-	Hostiles := make([]restUnitInfo,0,10)
+	Hostiles := make([]restUnitInfo, 0, 10)
 
-	for _,u := range v.UnitMap {
-			if u.hostile {
-				Hostiles = append(Hostiles, restUnitInfo{u.guid, u.name})
-			}
+	for _, u := range v.UnitMap {
+		if u.hostile {
+			Hostiles = append(Hostiles, restUnitInfo{u.guid, u.name})
 		}
+	}
 
 	v.GetPlayerClassSpec(c.lf)
 
@@ -378,7 +374,7 @@ func RESTEncounters(c *appContext, w http.ResponseWriter, r *http.Request) (int,
 	for _, v := range c.lf.encounters {
 		if !v.IsBoss {
 			continue
-		}	 
+		}
 
 		v.GetPlayerClassSpec(c.lf)
 		resp = append(resp, restEncounterList{v.ID, v.Name, v.EndTime.Sub(v.StartTime), v.Difficulty, v.Kill, v.Live})
@@ -391,11 +387,11 @@ func RESTEncounters(c *appContext, w http.ResponseWriter, r *http.Request) (int,
 }
 
 type RESTDamageSourceUnit struct {
-	Name string
+	Name   string
 	Damage int
-	ID  string
-	Class int
-	Spec int
+	ID     string
+	Class  int
+	Spec   int
 }
 
 func RESTDamageSources(c *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
@@ -407,15 +403,15 @@ func RESTDamageSources(c *appContext, w http.ResponseWriter, r *http.Request) (i
 	e, ok := c.lf.encounters[eID]
 
 	if !ok {
-		log.Printf("Cant find encounter #%v",eID);
-		return http.StatusNotFound, errors.New("Encounter not found")	
+		log.Printf("Cant find encounter #%v", eID)
+		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
 	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
 
 	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
 
-	response := make([]RESTDamageSourceUnit,0,0)
+	response := make([]RESTDamageSourceUnit, 0, 0)
 
 	for _, unit := range sourceUnits {
 		playerDamage := unit.getUnitDamageTotal(targetUnits, true)
@@ -436,15 +432,15 @@ func RESTDamageTargets(c *appContext, w http.ResponseWriter, r *http.Request) (i
 	e, ok := c.lf.encounters[eID]
 
 	if !ok {
-		log.Printf("Cant find encounter #%v",eID);
-		return http.StatusNotFound, errors.New("Encounter not found")	
+		log.Printf("Cant find encounter #%v", eID)
+		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
 	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
 
 	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
 
-	response := e.getDamageToTargets(sourceUnits,targetUnits)
+	response := e.getDamageToTargets(sourceUnits, targetUnits)
 
 	js, _ := json.Marshal(response)
 	w.Write(js)
@@ -460,48 +456,48 @@ func RESTDamageAbilities(c *appContext, w http.ResponseWriter, r *http.Request) 
 	e, ok := c.lf.encounters[eID]
 
 	if !ok {
-		log.Printf("Cant find encounter #%v",eID);
-		return http.StatusNotFound, errors.New("Encounter not found")	
+		log.Printf("Cant find encounter #%v", eID)
+		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
 	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
 
 	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
 
-	response := e.getDamageByAbility(sourceUnits,targetUnits)
+	response := e.getDamageByAbility(sourceUnits, targetUnits)
 
 	js, _ := json.Marshal(response)
 	w.Write(js)
 	return http.StatusOK, nil
 }
 
-func (u UnitMap) FilterUnits(filter string,  player bool, hostile bool) UnitMap {
+func (u UnitMap) FilterUnits(filter string, player bool, hostile bool) UnitMap {
 	returnMap := make(UnitMap)
 	switch {
-		case filter == "all":
-			for id, unit := range u {
-				if player && !unit.isPlayer{
-					continue
-				}
-				if hostile && !unit.hostile{
-					continue
-				}
+	case filter == "all":
+		for id, unit := range u {
+			if player && !unit.isPlayer {
+				continue
+			}
+			if hostile && !unit.hostile {
+				continue
+			}
+			returnMap[id] = unit
+		}
+	case strings.HasPrefix(filter, "name:"):
+		//all the units named name:
+		name := strings.TrimPrefix(filter, "name:")
+		for id, unit := range u {
+			if unit.name == name {
 				returnMap[id] = unit
 			}
-		case strings.HasPrefix(filter,"name:"):
-			//all the units named name:
-			name := strings.TrimPrefix(filter,"name:") 
-			for id, unit := range u {
-				if unit.name == name {
-					returnMap[id] = unit
-				}
+		}
+	default:
+		for id, unit := range u {
+			if id == filter {
+				returnMap[id] = unit
 			}
-		default:
-			for id, unit := range u {
-				if id == filter {
-					returnMap[id] = unit
-				}
-			}
+		}
 	}
 	return returnMap
 }

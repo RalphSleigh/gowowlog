@@ -41,8 +41,6 @@ func (e *encounter) GetPlayerDPS(lf *logFile, healing bool) []playerDPS {
 	return result
 }
 
-
-
 func (u *wunit) getUnitDamageTotal(targets UnitMap, pets bool) int {
 
 	if u == nil {
@@ -70,21 +68,21 @@ func (u *wunit) getUnitDamageTotal(targets UnitMap, pets bool) int {
 }
 
 type damageToTarget struct {
-	Name string
+	Name   string
 	Damage []int
-	Total int
-	}
+	Total  int
+}
 
 func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap) []damageToTarget {
 	tempMap := make(map[string]int)
 
-	for _,s := range sources {
+	for _, s := range sources {
 		for _, spell := range s.spells {
 			for _, e := range spell.damageEvents {
 				_, ok := targets[e.target.guid]
 				if ok {
-				tempMap[e.target.guid] += e.amount
-				tempMap[e.target.guid] += e.absorb
+					tempMap[e.target.guid] += e.amount
+					tempMap[e.target.guid] += e.absorb
 				}
 			}
 		}
@@ -109,17 +107,17 @@ func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap) []damag
 		r, ok := returnMap[name]
 		if !ok {
 			r.Name = name
-			r.Damage = make([]int,0,0)
+			r.Damage = make([]int, 0, 0)
 		}
 		r.Total += damage
 		r.Damage = append(r.Damage, damage)
 		returnMap[name] = r
-	} 
-	returnSlice := make([]damageToTarget,0,0)
+	}
+	returnSlice := make([]damageToTarget, 0, 0)
 
-	for _,v := range returnMap {
-		returnSlice = append(returnSlice,v)
-	} 
+	for _, v := range returnMap {
+		returnSlice = append(returnSlice, v)
+	}
 	return returnSlice
 }
 
@@ -175,17 +173,17 @@ func (sp *RESTSpellResponse) add(e spellEvent) {
 func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTSpellResponse {
 	workingMap := make(map[string]*RESTSpellResponse)
 
-	for _,s := range sources {
+	for _, s := range sources {
 		for id, spell := range s.spells {
 			var key string
-			if(len(sources) == 1){
+			if len(sources) == 1 {
 				key = spell.name
 			} else {
-				key = spell.name+" - "+s.name
+				key = spell.name + " - " + s.name
 			}
 			sR, ok := workingMap[key]
 			if !ok {
-			sR = &RESTSpellResponse{SpellID: id, SpellName: spell.name, School: spell.school, Casts: spell.casts}
+				sR = &RESTSpellResponse{SpellID: id, SpellName: spell.name, School: spell.school, Casts: spell.casts}
 			} else {
 				sR.Casts += len(s.casts)
 			}
@@ -193,7 +191,7 @@ func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTS
 			for _, e := range spell.damageEvents {
 				_, ok := targets[e.target.guid]
 				if ok {
-				sR.add(e)
+					sR.add(e)
 				}
 			}
 		}
@@ -201,10 +199,10 @@ func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTS
 		for _, pet := range s.pets {
 			for id, spell := range pet.spells {
 				var key string
-				if(len(sources) == 1){
-					key = spell.name+" ("+pet.name+")"
+				if len(sources) == 1 {
+					key = spell.name + " (" + pet.name + ")"
 				} else {
-					key = spell.name+" ("+pet.name+") - "+s.name
+					key = spell.name + " (" + pet.name + ") - " + s.name
 				}
 				sR, ok := workingMap[key]
 				if !ok {
@@ -223,37 +221,36 @@ func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTS
 		}
 	}
 
-	response := make([]RESTSpellResponse,0,0)
-	
-	for n,v := range workingMap {
+	response := make([]RESTSpellResponse, 0, 0)
+
+	for n, v := range workingMap {
 		v.SpellName = n
-		response = append(response,*v)
-	} 
+		response = append(response, *v)
+	}
 	return response
 
 	/*
-	returnMap := make(map[string]damageToTarget)
+		returnMap := make(map[string]damageToTarget)
 
-	for t, damage := range tempMap {
-		name := e.UnitMap[t].name
-		r, ok := returnMap[name]
-		if !ok {
-			r.Name = name
-			r.Damage = make([]int,0,0)
+		for t, damage := range tempMap {
+			name := e.UnitMap[t].name
+			r, ok := returnMap[name]
+			if !ok {
+				r.Name = name
+				r.Damage = make([]int,0,0)
+			}
+			r.Total += damage
+			r.Damage = append(r.Damage, damage)
+			returnMap[name] = r
 		}
-		r.Total += damage
-		r.Damage = append(r.Damage, damage)
-		returnMap[name] = r
-	} 
-	returnSlice := make([]damageToTarget,0,0)
+		returnSlice := make([]damageToTarget,0,0)
 
-	for _,v := range returnMap {
-		returnSlice = append(returnSlice,v)
-	} 
-	return returnSlice
+		for _,v := range returnMap {
+			returnSlice = append(returnSlice,v)
+		}
+		return returnSlice
 	*/
 }
-
 
 //These functions feed data to the client
 

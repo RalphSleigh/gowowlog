@@ -941,7 +941,7 @@ func (e *encounter) getUnitFromFields(fields []string) *wunit {
 			unit.isPlayer = true
 		}
 
-		flags,_ := strconv.ParseInt(fields[2], 0, 0)
+		flags, _ := strconv.ParseInt(fields[2], 0, 0)
 
 		if (flags & 0x40) > 0 {
 			unit.hostile = true
