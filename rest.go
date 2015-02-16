@@ -407,9 +407,9 @@ func RESTDamageSources(c *appContext, w http.ResponseWriter, r *http.Request) (i
 		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
-	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
+	sourceUnits := e.UnitMap.FilterUnits(sID)
 
-	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
+	targetUnits := e.UnitMap.FilterUnits(tID)
 
 	response := make([]RESTDamageSourceUnit, 0, 0)
 
@@ -436,9 +436,9 @@ func RESTDamageTargets(c *appContext, w http.ResponseWriter, r *http.Request) (i
 		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
-	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
+	sourceUnits := e.UnitMap.FilterUnits(sID)
 
-	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
+	targetUnits := e.UnitMap.FilterUnits(tID)
 
 	response := e.getDamageToTargets(sourceUnits, targetUnits)
 
@@ -460,9 +460,9 @@ func RESTDamageAbilities(c *appContext, w http.ResponseWriter, r *http.Request) 
 		return http.StatusNotFound, errors.New("Encounter not found")
 	}
 
-	sourceUnits := e.UnitMap.FilterUnits(sID, true, false)
+	sourceUnits := e.UnitMap.FilterUnits(sID)
 
-	targetUnits := e.UnitMap.FilterUnits(tID, false, true)
+	targetUnits := e.UnitMap.FilterUnits(tID)
 
 	response := e.getDamageByAbility(sourceUnits, targetUnits)
 
@@ -471,18 +471,43 @@ func RESTDamageAbilities(c *appContext, w http.ResponseWriter, r *http.Request) 
 	return http.StatusOK, nil
 }
 
-func (u UnitMap) FilterUnits(filter string, player bool, hostile bool) UnitMap {
+/*
+Filters a unitmap based on filter, possible values:
+all
+players
+hostile
+name:<name>
+<guid>
+
+
+*/
+func (u UnitMap) FilterUnits(filter string) UnitMap {
 	returnMap := make(UnitMap)
 	switch {
 	case filter == "all":
+		return u
+		/*
+			for id, unit := range u {
+				if player && !unit.isPlayer {
+					continue
+				}
+				if hostile && !unit.hostile {
+					continue
+				}
+				returnMap[id] = unit
+			}
+		*/
+	case filter == "players":
 		for id, unit := range u {
-			if player && !unit.isPlayer {
-				continue
+			if unit.isPlayer {
+				returnMap[id] = unit
 			}
-			if hostile && !unit.hostile {
-				continue
+		}
+	case filter == "hostiles":
+		for id, unit := range u {
+			if unit.hostile {
+				returnMap[id] = unit
 			}
-			returnMap[id] = unit
 		}
 	case strings.HasPrefix(filter, "name:"):
 		//all the units named name:

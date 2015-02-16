@@ -6,9 +6,9 @@
 		</thead>
 		<tbody>
 				<tr ng-repeat="target in units | orderBy:orderFunction">
-					<td>{{target.Name}}</td>
+					<td><img class="tableIcon" ng-src="icons/{{target.Spec | specIconString}}" />{{target.Name}}</td>
 					<td>
-					<div ng-repeat="unit in target.Damage | orderBy: unit : true" style="width:{{barPercent(unit)}}%" class="classBar bg-{{cssClass(0)}}"></div>
+					<div ng-repeat="unit in target.Damage | orderBy: unit : true" style="width:{{barPercent(unit)}}%" class="classBar bg-{{cssClass(target.Class)}}"></div>
 					{{target.Total  | prettyNum}}</td>
 					<td>{{target.Total * 100/total() | prettyNum}}</td>
 				</tr>

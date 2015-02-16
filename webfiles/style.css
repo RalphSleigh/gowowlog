@@ -252,7 +252,34 @@ padding-right:10px;
 }
 
 
-/*animation*/
+/* Bootstrap extras */
 
+.dropdown-menu.multi-column {
+        width: 400px;
+}
 
+.dropdown-menu.multi-column .dropdown-menu {
+        display: block !important;
+        position: static !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        min-width:80px;
+}
+
+@media screen and (max-width: 991px){
+    .columns{
+        height: 200px;
+        overflow:scroll;
+    }
+}
+
+@media screen and (min-width: 992px){
+    .columns{
+        -moz-column-count:2; /* Firefox */
+        -webkit-column-count:2; /* Safari and Chrome */
+        column-count:2;
+        width: 500px;
+    }
+}
 

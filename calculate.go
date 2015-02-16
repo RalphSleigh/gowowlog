@@ -69,6 +69,8 @@ func (u *wunit) getUnitDamageTotal(targets UnitMap, pets bool) int {
 
 type damageToTarget struct {
 	Name   string
+	Class  int
+	Spec   int
 	Damage []int
 	Total  int
 }
@@ -104,9 +106,13 @@ func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap) []damag
 
 	for t, damage := range tempMap {
 		name := e.UnitMap[t].name
+		class := e.UnitMap[t].Class
+		spec := e.UnitMap[t].Spec
 		r, ok := returnMap[name]
 		if !ok {
 			r.Name = name
+			r.Class = class
+			r.Spec = spec
 			r.Damage = make([]int, 0, 0)
 		}
 		r.Total += damage
@@ -184,8 +190,6 @@ func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTS
 			sR, ok := workingMap[key]
 			if !ok {
 				sR = &RESTSpellResponse{SpellID: id, SpellName: spell.name, School: spell.school, Casts: spell.casts}
-			} else {
-				sR.Casts += len(s.casts)
 			}
 			workingMap[key] = sR
 			for _, e := range spell.damageEvents {
@@ -207,8 +211,6 @@ func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTS
 				sR, ok := workingMap[key]
 				if !ok {
 					sR = &RESTSpellResponse{SpellID: id, SpellName: spell.name, School: spell.school, Casts: spell.casts}
-				} else {
-					sR.Casts += len(s.casts)
 				}
 				workingMap[key] = sR
 				for _, e := range spell.damageEvents {

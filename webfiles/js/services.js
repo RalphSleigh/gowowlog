@@ -36,7 +36,7 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 	  //we call $state.go afterwards to propagate changes to our controllers..
 	  //Mostly because our state is several orthogonal variables and not so tree-like
 
-	  var state = {damage:{s:{Name:"Source",ID:"all"},t:{Name:"Target",ID:"all"},a:0,l:"source"}};
+	  var state = {damage:{s:{Name:"Source",ID:"players"},t:{Name:"Target",ID:"hostiles"},a:0,l:"source"}};
 	  var exports = {};
 		
 		
@@ -92,13 +92,17 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 		
 		exports.setDamageSource = function(p) {
 			if(p == "all") state.damage.s = {Name:"Source",ID:"all"};
+			else if(p == "players") state.damage.s = {Name:"Players",ID:"players"};
+			else if(p == "hostiles") state.damage.s = {Name:"Hostiles",ID:"hostiles"};
 			else state.damage.s = p
 			$state.go($state.current,{s:state.damage.s.ID});	
 				
 		}
 		
 		exports.setDamageTarget = function(p) {
-			if(p == "all") state.damage.t = {Name:"Target",ID:"all"};
+			if(p == "all") state.damage.t = {Name:"Source",ID:"all"};
+			else if(p == "players") state.damage.t = {Name:"Players",ID:"players"};
+			else if(p == "hostiles") state.damage.t = {Name:"Hostiles",ID:"hostiles"};
 			else state.damage.t = p
 			$state.go($state.current,{t:state.damage.t.ID});	
 				

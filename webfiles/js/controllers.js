@@ -117,11 +117,6 @@ damageApp.controller('DamageMenu', ['$scope', 'DmgAppState', 'EncounterData', fu
 	$scope.selectDamageSource = function(source) {
 		DmgAppState.setDamageSource(source);
 	};
-
-	
-	$scope.selectDamageSource = function(p){
-	  DmgAppState.setDamageSource(p);
-  };
   
    $scope.selectDamageTarget = function(p){
 	  DmgAppState.setDamageTarget(p);
@@ -268,7 +263,7 @@ damageApp.controller('DamageAbilities', ['$scope', 'Dmg', 'DmgAppState', 'Damage
 	};
 
 	$scope.orderFunction = function(e) {
-		return -(e.Damage);
+		return -(e.Damage + e.Absorb);
 	};
 
 	$scope.maxSpellDamage = function() {

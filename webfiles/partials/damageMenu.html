@@ -2,13 +2,38 @@
 
 <li class="dropdown">
 					<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{sourceName(state.damage.s)}}<span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">
+					<!--
+					<div class="dropdown-menu multi-column">
+       				    <div class="row">
+          			      <div class="col-md-6">
+                			    <ul class="dropdown-menu">
+                   			     	<li><a href="#">Col 1 - Opt 1</a></li>
+                     			 	<li><a href="#">Col 1 - Opt 2</a></li>
+                  			  </ul>
+              			  </div>
+             			   <div class="col-md-6">
+                 			   <ul class="dropdown-menu">
+                     			  <li><a href="#">Col 2 - Opt 1</a></li>
+                      			  <li><a href="#">Col 2 - Opt 2</a></li>
+                   				</ul>
+                			</div>
+            			</div>
+        			</div>
+					-->
+					<ul class="dropdown-menu columns" role="menu">
 						<li><a  ng-click="selectDamageSource('all')">All</a></li>
 						<li class="divider"></li>
+						<li><a  ng-click="selectDamageSource('players')">All Players</a></li>
 						<li ng-repeat="p in e.PlayerDPS">
 							<a ng-click="selectDamageSource(p)" class="colour-{{cssClass(p.Class)}}">{{p.Name}}</a>
 						</li>
+						<li style="break-before: column;-webkit-column-break-before: always"></li>
+						<li><a  ng-click="selectDamageSource('hostiles')">All Hostiles</a></li>
+						<li ng-repeat="p in e.targetNames | orderBy:'Name'">
+							<a ng-click="selectDamageSource(p)">{{p.Name}}</a>
+						</li>
 					</ul>
+				
 				</li>
 </ul>
 
@@ -24,13 +49,18 @@
 
 <li class="dropdown">
 					<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{targetName(state.damage.t)}}<span class="caret"></span></a>
-					<ul class="dropdown-menu" role="menu">
+					<ul class="dropdown-menu columns" role="menu">
 						<li><a  ng-click="selectDamageTarget('all')">All</a></li>
 						<li class="divider"></li>
+						<li><a  ng-click="selectDamageTarget('players')">All Players</a></li>
+						<li ng-repeat="p in e.PlayerDPS">
+							<a ng-click="selectDamageTarget(p)" class="colour-{{cssClass(p.Class)}}">{{p.Name}}</a>
+						</li>
+						<li style="break-before: column;-webkit-column-break-before: always"></li>
+						<li><a  ng-click="selectDamageTarget('hostiles')">All Hostiles</a></li>
 						<li ng-repeat="p in e.targetNames | orderBy:'Name'">
 							<a ng-click="selectDamageTarget(p)">{{p.Name}}</a>
 						</li>
-
 					</ul>
 				</li>
 </ul>
