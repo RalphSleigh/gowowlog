@@ -31,9 +31,9 @@ func (e *encounter) GetPlayerDPS(lf *logFile, healing bool) []playerDPS {
 		if !unit.isPlayer {
 			continue
 		}
-		playerDamage := unit.getUnitDamageTotal(e.UnitMap, false)
+		playerDamage := unit.getUnitDamageTotal(e.UnitMap, false, 0)
 		for _, pet := range unit.pets {
-			playerDamage += pet.getUnitDamageTotal(e.UnitMap, false)
+			playerDamage += pet.getUnitDamageTotal(e.UnitMap, false, 0)
 		}
 		result = append(result, playerDPS{id, unit.name, unit.Class, unit.Spec, playerDamage, playerDamage / int(duration.Seconds())})
 	}
@@ -41,45 +41,71 @@ func (e *encounter) GetPlayerDPS(lf *logFile, healing bool) []playerDPS {
 	return result
 }
 
-func (u *wunit) getUnitDamageTotal(targets UnitMap, pets bool) int {
+func (u *wunit) getUnitDamageTotal(targets UnitMap, pets bool, ability int) int {
 
 	if u == nil {
 		return 0 //pet that never appeared in UnitMap cause no events
 	}
 	var totalDamage int
 
-	for _, spell := range u.spells {
-
-		for _, e := range spell.damageEvents {
-			_, ok := targets[e.target.guid]
-			if ok {
-				totalDamage += e.amount
-				totalDamage += e.absorb
+		Spellname := ""
+		for spellID, spell := range u.spells {//lets get the spell name requested and seatch on that, sometimes the cast ID does not match damage events
+			if spellID == ability {
+				Spellname = spell.name
 			}
 		}
-	}
+
+		for _, spell := range u.spells {
+			if (ability > 0 && spell.name != Spellname) {
+				continue
+			}
+			for _, e := range spell.damageEvents {
+				_, ok := targets[e.target.guid]
+				if ok {
+					totalDamage += e.amount
+					totalDamage += e.absorb
+				}
+			}
+		}
 
 	if pets {
 		for _, pet := range u.pets {
-			totalDamage += pet.getUnitDamageTotal(targets, false)
+			totalDamage += pet.getUnitDamageTotal(targets, false, ability)
 		}
 	}
 	return totalDamage
+}
+
+type damageToTargetSlice struct {//angular does not like duplicates here...
+	ID string
+	Damage int
 }
 
 type damageToTarget struct {
 	Name   string
 	Class  int
 	Spec   int
-	Damage []int
+	Damage []damageToTargetSlice
 	Total  int
 }
 
-func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap) []damageToTarget {
+func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap, ability int) []damageToTarget {
+
 	tempMap := make(map[string]int)
 
 	for _, s := range sources {
+
+		Spellname := ""
+		for spellID, spell := range s.spells {//lets get the spell name requested and seatch on that, sometimes the cast ID does not match damage events
+			if spellID == ability {
+				Spellname = spell.name
+			}
+		}
+
 		for _, spell := range s.spells {
+			if (ability > 0 && spell.name != Spellname) {
+				continue
+			}
 			for _, e := range spell.damageEvents {
 				_, ok := targets[e.target.guid]
 				if ok {
@@ -90,7 +116,10 @@ func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap) []damag
 		}
 
 		for _, pet := range s.pets {
-			for _, spell := range pet.spells {
+			for spellID, spell := range pet.spells {
+				if (ability > 0 && spellID != ability) {
+					continue
+				}
 				for _, e := range spell.damageEvents {
 					_, ok := targets[e.target.guid]
 					if ok {
@@ -113,10 +142,10 @@ func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap) []damag
 			r.Name = name
 			r.Class = class
 			r.Spec = spec
-			r.Damage = make([]int, 0, 0)
+			r.Damage = make([]damageToTargetSlice, 0, 0)
 		}
 		r.Total += damage
-		r.Damage = append(r.Damage, damage)
+		r.Damage = append(r.Damage, damageToTargetSlice{t,damage})
 		returnMap[name] = r
 	}
 	returnSlice := make([]damageToTarget, 0, 0)
@@ -130,6 +159,7 @@ func (e *encounter) getDamageToTargets(sources UnitMap, targets UnitMap) []damag
 type RESTSpellResponse struct {
 	SpellID   int
 	SpellName string
+	BaseSpellName string
 	School    int64
 	Damage    int
 	Absorb    int
@@ -176,11 +206,22 @@ func (sp *RESTSpellResponse) add(e spellEvent) {
 	//return sp
 }
 
-func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTSpellResponse {
+func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap, ability int) []RESTSpellResponse {
 	workingMap := make(map[string]*RESTSpellResponse)
 
 	for _, s := range sources {
+
+		Spellname := ""
+		for spellID, spell := range s.spells {//lets get the spell name requested and seatch on that, sometimes the cast ID does not match damage events
+			if spellID == ability {
+				Spellname = spell.name
+			}
+		}
+
 		for id, spell := range s.spells {
+			if (ability > 0 && spell.name != Spellname) {
+				continue
+			}
 			var key string
 			if len(sources) == 1 {
 				key = spell.name
@@ -202,6 +243,9 @@ func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTS
 
 		for _, pet := range s.pets {
 			for id, spell := range pet.spells {
+				if (ability > 0 && id != ability) {
+					continue
+				}
 				var key string
 				if len(sources) == 1 {
 					key = spell.name + " (" + pet.name + ")"
@@ -226,6 +270,7 @@ func (e *encounter) getDamageByAbility(sources UnitMap, targets UnitMap) []RESTS
 	response := make([]RESTSpellResponse, 0, 0)
 
 	for n, v := range workingMap {
+		v.BaseSpellName = v.SpellName
 		v.SpellName = n
 		response = append(response, *v)
 	}

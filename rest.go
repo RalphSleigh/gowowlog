@@ -399,6 +399,7 @@ func RESTDamageSources(c *appContext, w http.ResponseWriter, r *http.Request) (i
 	eID, _ := strconv.Atoi(vars["eID"])
 	sID := vars["sID"]
 	tID := vars["tID"]
+	aID, _ := strconv.Atoi(vars["aID"])
 
 	e, ok := c.lf.encounters[eID]
 
@@ -414,7 +415,7 @@ func RESTDamageSources(c *appContext, w http.ResponseWriter, r *http.Request) (i
 	response := make([]RESTDamageSourceUnit, 0, 0)
 
 	for _, unit := range sourceUnits {
-		playerDamage := unit.getUnitDamageTotal(targetUnits, true)
+		playerDamage := unit.getUnitDamageTotal(targetUnits, true, aID)
 		response = append(response, RESTDamageSourceUnit{unit.name, playerDamage, unit.guid, unit.Class, unit.Spec})
 	}
 
@@ -428,6 +429,7 @@ func RESTDamageTargets(c *appContext, w http.ResponseWriter, r *http.Request) (i
 	eID, _ := strconv.Atoi(vars["eID"])
 	sID := vars["sID"]
 	tID := vars["tID"]
+	aID, _ := strconv.Atoi(vars["aID"])
 
 	e, ok := c.lf.encounters[eID]
 
@@ -440,7 +442,7 @@ func RESTDamageTargets(c *appContext, w http.ResponseWriter, r *http.Request) (i
 
 	targetUnits := e.UnitMap.FilterUnits(tID)
 
-	response := e.getDamageToTargets(sourceUnits, targetUnits)
+	response := e.getDamageToTargets(sourceUnits, targetUnits, aID)
 
 	js, _ := json.Marshal(response)
 	w.Write(js)
@@ -452,6 +454,7 @@ func RESTDamageAbilities(c *appContext, w http.ResponseWriter, r *http.Request) 
 	eID, _ := strconv.Atoi(vars["eID"])
 	sID := vars["sID"]
 	tID := vars["tID"]
+	aID, _ := strconv.Atoi(vars["aID"])
 
 	e, ok := c.lf.encounters[eID]
 
@@ -464,7 +467,7 @@ func RESTDamageAbilities(c *appContext, w http.ResponseWriter, r *http.Request) 
 
 	targetUnits := e.UnitMap.FilterUnits(tID)
 
-	response := e.getDamageByAbility(sourceUnits, targetUnits)
+	response := e.getDamageByAbility(sourceUnits, targetUnits, aID)
 
 	js, _ := json.Marshal(response)
 	w.Write(js)

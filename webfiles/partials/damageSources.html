@@ -1,12 +1,12 @@
 <div id="dpsTable">
-<table class="table table-condensed table-striped table-hover">
+<table class="table table-condensed table-striped">
 	<colgroup><col><col><col></colgroup>
 		<thead>
 			<tr><th>Name</th><th>Damage</th><th>DPS</th></tr>
 		</thead>
 		<tbody>
 				<tr ng-repeat="player in units | orderBy:orderFunction">
-					<td><img class="tableIcon" ng-src="icons/{{player.Spec | specIconString}}" />{{player.Name}}</td>
+					<td><img ng-if="player.Spec > 0" class="tableIcon" ng-src="icons/{{player.Spec | specIconString}}" />{{player.Name}}</td>
 					<td>
 					<div style="width:{{barPercent(player.Damage)}}%" class="classBar bg-{{cssClass(player.Class)}}"></div>
 					{{player.Damage | prettyNum}}</td>

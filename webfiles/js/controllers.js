@@ -92,10 +92,17 @@ damageApp.controller('DamageMenu', ['$scope', 'DmgAppState', 'EncounterData', fu
 		$scope.e.targetNames.push({Name:key+" ("+value+")",ID:"name:"+key})		
 	});
 
-	$scope.sourceName = function(s) {
+	$scope.Name = function(s, all) {
 
 		var name
 
+		if(s.ID == "all") return all;
+		if(s.ID == "players") return "Players";
+		if(s.ID == "hostiles") return "Hostiles";
+
+		var parts = s.ID.split(":");
+		if(parts[1])return parts[1];
+		
 		angular.forEach($scope.e.PlayerDPS,function(value,key){		
 			if(s.ID == value.ID)name = value.Name;
 		});
@@ -103,16 +110,6 @@ damageApp.controller('DamageMenu', ['$scope', 'DmgAppState', 'EncounterData', fu
 		if(s.Name)return s.Name;
 		return "Hmm";
 	}
-
-	$scope.targetName = function(s) {
-
-		
-		var parts = s.ID.split(":");
-		if(parts[1])return parts[1];
-		if(s.Name)return s.Name;
-		return "Hmm";
-	}
-
 
 	$scope.selectDamageSource = function(source) {
 		DmgAppState.setDamageSource(source);
@@ -129,6 +126,11 @@ damageApp.controller('DamageMenu', ['$scope', 'DmgAppState', 'EncounterData', fu
   $scope.cssClass = function(unitClass) {
 	return WOW.cs[unitClass].CSSClass;
 	};
+
+	$scope.selectClearAbility = function()  {
+		DmgAppState.setDamageAbility({SpellID:0,BaseSpellName:"All Spells"});
+
+	}
 
 }]);
 
@@ -258,6 +260,12 @@ damageApp.controller('DamageAbilities', ['$scope', 'Dmg', 'DmgAppState', 'Damage
 		return damage * 70/maxDamage
 	};
 	*/
+
+	$scope.selectAbilityRow = function(SpellID){
+
+		DmgAppState.setDamageAbility(SpellID);
+	}
+
   $scope.cssClass = function(unitClass) {
 	return WOW.cs[unitClass].CSSClass;
 	};

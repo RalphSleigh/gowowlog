@@ -591,7 +591,7 @@ func (lf *logFile) parseSpellAbsorbed(event *wowEvent) {
 			aura.events = append(aura.events, auraEvent)
 		}
 	} else { //melee
-		s := source.getSpell([]string{"0", "Melee", "1"})
+		s := source.getSpell([]string{"1", "Melee", "1"})
 		amount, _ := strconv.Atoi(event.fields[16])
 		//credit damage
 		s.damageEvents = append(s.damageEvents, spellEvent{event.eventTime, target, 0, amount, false, false, false})
@@ -654,7 +654,7 @@ func (lf *logFile) parseSwingDamageLanded(event *wowEvent) {
 
 	source, target := lf.currentEncounter.getSourceDestUnit(event)
 
-	s := source.getSpell([]string{"0", "Melee", "1"})
+	s := source.getSpell([]string{"1", "Melee", "1"})
 	damage, _ := strconv.Atoi(event.fields[21])
 
 	crit := event.fields[27] == "1"

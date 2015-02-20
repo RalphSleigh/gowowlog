@@ -15,13 +15,13 @@ dmgService.factory('Dmg', ['$resource',
       method : 'GET',
       cache : true
     }});
-	  factory.DamageSources = $resource('/api/e/:e/damage/sources/:s/:t', {},{list : {
+	  factory.DamageSources = $resource('/api/e/:e/damage/sources/:s/:t/:a', {},{list : {
       method : 'GET',
     }});
-	  factory.DamageTargets = $resource('/api/e/:e/damage/targets/:s/:t', {},{list : {
+	  factory.DamageTargets = $resource('/api/e/:e/damage/targets/:s/:t/:a', {},{list : {
       method : 'GET',
     }});
-	  factory.DamageAbilities = $resource('/api/e/:e/damage/abilities/:s/:t', {},{list : {
+	  factory.DamageAbilities = $resource('/api/e/:e/damage/abilities/:s/:t/:a', {},{list : {
       method : 'GET',
     }});
 
@@ -36,7 +36,7 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 	  //we call $state.go afterwards to propagate changes to our controllers..
 	  //Mostly because our state is several orthogonal variables and not so tree-like
 
-	  var state = {damage:{s:{Name:"Source",ID:"players"},t:{Name:"Target",ID:"hostiles"},a:0,l:"source"}};
+	  var state = {damage:{s:{Name:"Source",ID:"players"},t:{Name:"Target",ID:"hostiles"},a:{SpellID:0,BaseSpellName:"All Spells"},l:"source"}};
 	  var exports = {};
 		
 		
@@ -51,7 +51,8 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 				if($state.includes('home.encounter.damage.done')){
 					state.damage.s.ID = $stateParams.s;
 					state.damage.t.ID = $stateParams.t;
-					state.damage.a = $stateParams.a;
+					state.damage.a.SpellID = $stateParams.a;
+					if(state.damage.a.SpellID > 0)state.damage.a.BaseSpellName = state.damage.a.SpellID //we don't know the spellname as it came from URL
 				}
 				
 				if($state.includes('home.encounter.damage.done.source'))state.damage.l = "source"
@@ -100,7 +101,7 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 		}
 		
 		exports.setDamageTarget = function(p) {
-			if(p == "all") state.damage.t = {Name:"Source",ID:"all"};
+			if(p == "all") state.damage.t = {Name:"Target",ID:"all"};
 			else if(p == "players") state.damage.t = {Name:"Players",ID:"players"};
 			else if(p == "hostiles") state.damage.t = {Name:"Hostiles",ID:"hostiles"};
 			else state.damage.t = p
@@ -114,10 +115,24 @@ dmgService.factory('DmgAppState', ['$state','$stateParams',
 			$state.go("home.encounter.damage.done."+l);
 		}
 
+		exports.setDamageAbility = function(spell) {
+			//WHere to go too?
+			state.damage.a = spell
+			//state.damage.t = {Name:"Target",ID:"all"};
+			//state.damage.s = {Name:"Source",ID:"all"};
+			state.damage.l = "target"
+			//$state.go("home.encounter.damage.done.target",{s:"all",t:"all",a:spell.SpellID});
+			$state.go("home.encounter.damage.done.target",{a:spell.SpellID});
+		}
+
 		exports.setCurrentEncounter = function(e)  {
+			if(state.encounter.Name != e.Name && state.encounter.ID != e.ID) { //reset spell on changing to a differnt boss
+				$stateParams.a = 0
+				state.damage.a = 0;
+			}
 			state.encounter = e
 			if($state.current.name == "home") {
-				$state.go("home.encounter.damage.done.source",{e:state.encounter.ID});
+				$state.go("home.encounter.damage.done.source",{e:state.encounter.ID,s:"players"});
 			} else {
 				$state.go($state.current,{e:state.encounter.ID});	
 			}

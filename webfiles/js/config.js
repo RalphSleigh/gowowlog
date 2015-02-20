@@ -54,7 +54,7 @@ damageApp.config(function($stateProvider, $urlRouterProvider) {
 		controller:'DamageSources' }},
 	    resolve:{
 	 		DamageData: function($stateParams, Dmg){
-	 				return Dmg.DamageSources.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t}).$promise;
+	 				return Dmg.DamageSources.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t,a:$stateParams.a}).$promise;
 	 			},
 	 		}	  
     })
@@ -66,7 +66,7 @@ damageApp.config(function($stateProvider, $urlRouterProvider) {
 		controller:'DamageTargets' }},
 	    resolve:{
 	 		DamageData: function($stateParams, Dmg){
-	 				return Dmg.DamageTargets.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t}).$promise;
+	 				return Dmg.DamageTargets.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t,a:$stateParams.a}).$promise;
 	 			},
 	 		}	     
     })
@@ -78,7 +78,7 @@ damageApp.config(function($stateProvider, $urlRouterProvider) {
 		controller:'DamageAbilities' }},
 	    resolve:{
 	 		DamageData: function($stateParams, Dmg){
-	 				return Dmg.DamageAbilities.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t}).$promise;
+	 				return Dmg.DamageAbilities.query({e: $stateParams.e,s: $stateParams.s,t: $stateParams.t,a:$stateParams.a}).$promise;
 	 			},
 	 		}	     
     })

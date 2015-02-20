@@ -1,14 +1,14 @@
 <div id="damageTargetTable">
-<table class="table table-condensed table-striped table-hover">
+<table class="table table-condensed table-striped">
 	<colgroup><col><col><col></colgroup>
 		<thead>
 			<tr><th>Name</th><th>Damage</th><th>%</th></tr>
 		</thead>
 		<tbody>
 				<tr ng-repeat="target in units | orderBy:orderFunction">
-					<td><img class="tableIcon" ng-src="icons/{{target.Spec | specIconString}}" />{{target.Name}}</td>
+					<td><img ng-if="target.Spec > 0" class="tableIcon" ng-src="icons/{{target.Spec | specIconString}}" />{{target.Name}}</td>
 					<td>
-					<div ng-repeat="unit in target.Damage | orderBy: unit : true" style="width:{{barPercent(unit)}}%" class="classBar bg-{{cssClass(target.Class)}}"></div>
+					<div ng-repeat="unit in target.Damage | orderBy: 'Damage' : true" style="width:{{barPercent(unit.Damage)}}%" class="classBar bg-{{cssClass(target.Class)}}"></div>
 					{{target.Total  | prettyNum}}</td>
 					<td>{{target.Total * 100/total() | prettyNum}}</td>
 				</tr>

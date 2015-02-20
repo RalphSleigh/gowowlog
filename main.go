@@ -56,7 +56,7 @@ func iconHandler(w http.ResponseWriter, r *http.Request) {
 	//TODO: Fix errors
 	vars := mux.Vars(r)
 	spellID := vars["id"]
-	if spellID == "0" {
+	if spellID == "1" {
 		spellID = "88163"
 	}
 
@@ -170,9 +170,9 @@ func main() {
 	api.Handle("/e/{eID:[0-9]+}/p/{pID}/spells", appHandler{aC, RESTSpellsDetails})
 	api.Handle("/e/{eID:[0-9]+}/p/{pID}/auras", appHandler{aC, RESTAuraDetails})
 	//http://ts.xavius.org:8081/api/e/35/damage/sources/Player-3391-068199AA/Creature-0-3110-1228-11995-79956-000136E465
-	api.Handle("/e/{eID:[0-9]+}/damage/sources/{sID}/{tID}", appHandler{aC, RESTDamageSources})
-	api.Handle("/e/{eID:[0-9]+}/damage/targets/{sID}/{tID}", appHandler{aC, RESTDamageTargets})
-	api.Handle("/e/{eID:[0-9]+}/damage/abilities/{sID}/{tID}", appHandler{aC, RESTDamageAbilities})
+	api.Handle("/e/{eID:[0-9]+}/damage/sources/{sID}/{tID}/{aID}", appHandler{aC, RESTDamageSources})
+	api.Handle("/e/{eID:[0-9]+}/damage/targets/{sID}/{tID}/{aID}", appHandler{aC, RESTDamageTargets})
+	api.Handle("/e/{eID:[0-9]+}/damage/abilities/{sID}/{tID}/{aID}", appHandler{aC, RESTDamageAbilities})
 
 	r.HandleFunc("/icons/{id:[0-9]+}", iconHandler)
 	r.HandleFunc("/icons/{spell:[a-zA-Z0-9_]+}", iconStringHandler)
