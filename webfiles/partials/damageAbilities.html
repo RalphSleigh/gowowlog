@@ -1,0 +1,30 @@
+<div id="spellTable">
+	<table class="table table-condensed table-striped table-hover">
+			<colgroup><col><col><col><col><col><col><col></colgroup>
+			<thead>
+				<tr>
+					<th>Spell</th>
+					<th>Damage (Absorbed)</th>
+					<th>%</th>
+					<th>Casts</th>
+					<th>Hits</th>
+					<th>Ticks</th>
+					<th>Crits</th>
+					<th>Multi</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-click="selectAbilityRow(spell)" ng-repeat="spell in spells | orderBy:orderFunction">
+					<td><img ng-src="icons/{{spell.SpellID}}" />{{spell.SpellName}}</td>
+					<td><div style="width:{{spell.Damage * 70/maxSpellDamage() }}%;{{spell.School | schoolBG}}" class="classBar"></div><div style="width:{{spell.Absorb * 70/maxSpellDamage() }}%;{{spell.School | schoolBG}}" class="classBar"></div>{{spell.Damage | prettyNum}} ({{spell.Absorb | prettyNum}})</td>
+					<td>{{(spell.Damage+spell.Absorb) * 100/unitDamage() | prettyNum }}</td>
+					<td>{{spell.Casts}}</td>
+					<td>{{spell.Hits}}</td>
+					<td>{{spell.Ticks}}</td>
+					<td>{{((spell.Hits+spell.Ticks) > 0 ? (spell.Crits * 100) / (spell.Hits+spell.Ticks+spell.Multis): 0) | prettyNum}}%</td>
+					<td>{{((spell.Hits+spell.Ticks) > 0 ? (spell.Multis * 100) / (spell.Hits+spell.Ticks) : 0) | prettyNum}}%</td>
+				</tr>
+			</tbody>
+	</table>
+</div>
+
